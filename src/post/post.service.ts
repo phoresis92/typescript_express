@@ -4,10 +4,10 @@ import CreatePostDto from "./post.dto";
 import PostNotFoundException from "../exceptions/PostNotFoundException";
 import Post from "./post.entity";
 
-import { Container } from 'typedi';
+import { Service } from 'typedi';
 
-
-export default class PostService {
+@Service
+class PostService {
     constructor();
 
     public createPost = async (request: RequestWithUser, response: express.Response) => {
@@ -58,3 +58,5 @@ export default class PostService {
         }
     }
 }
+
+export default

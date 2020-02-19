@@ -1,6 +1,6 @@
 import {NextFunction, Request, Response} from 'express';
 import {Container} from 'typedi';
-import LogErr from '../entity/log_error.entity';
+import LogErr from '../entity/log/log_error.entity';
 import HttpException from '../exceptions/HttpException';
 
 import {getRepository} from 'typeorm';

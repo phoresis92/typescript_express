@@ -7,7 +7,7 @@ const config: ConnectionOptions = {
   username: process.env.RDB_USER,
   password: process.env.RDB_PASSWORD,
   database: process.env.RDB_DB,
-  // synchronize: true,
+  synchronize: true,
   logging: true,
   entities: [
     __dirname + '/../**/*.entity{.ts,.js}',

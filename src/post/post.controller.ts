@@ -8,6 +8,8 @@ import validationMiddleware from '../middleware/validation.middleware';
 import CreatePostDto from './post.dto';
 import Post from './post.entity';
 
+import success from '../utils/Success'
+
 // import { celebrate, Joi } from 'celebrate';
 // import { Container } from 'typedi';
 
@@ -28,7 +30,7 @@ class PostController implements Controller {
       .all(`${this.path}/*`, authMiddleware)
       .patch(`${this.path}/:id`, validationMiddleware(CreatePostDto, true), this.modifyPost)
       .delete(`${this.path}/:id`, this.deletePost)
-      .post(this.path, authMiddleware, validationMiddleware(CreatePostDto), this.createPost);
+      .post(this.path, /*authMiddleware,*/ validationMiddleware(CreatePostDto), this.createPost);
   }
 
   private createPost = async (request: RequestWithUser, response: express.Response) => {
@@ -46,24 +48,27 @@ class PostController implements Controller {
   private getAllPosts = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
     try {
     const posts = await this.postRepository.find({ relations: ['categories'] });
-    response.send(posts);
+    response.send(new success(request.params, next, posts, 1, `wowowoww`).resultObj());
 
     }catch(e){
       console.log(e)
       return e;
     }
 
-    next();
   }
 
   private getPostById = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
+    console.log(request.body)
+    console.log(request.params)
+    console.log(request.query)
     const id = request.params.id;
     const post = await this.postRepository.findOne(id, { relations: ['categories'] });
     if(!post){
       next(new PostNotFoundException(id));
+      return;
     }
-      response.send(post);
-    next();
+      response.send(new success(request.params, next, post, 1, `here?`).resultObj());
+
   }
 
   private modifyPost = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
@@ -90,3 +95,4 @@ class PostController implements Controller {
 }
 
 export default PostController;
+

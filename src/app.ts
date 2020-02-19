@@ -1,5 +1,6 @@
 import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
+import multer from 'multer';
 import express from 'express';
 import {Container} from 'typedi';
 import Controller from './interfaces/controller.interface';
@@ -34,7 +35,9 @@ class App {
   }
 
   private initializeMiddlewares() {
-    this.app.use(bodyParser.json());
+    this.app.use(bodyParser.json()); // for parsing application/json
+    this.app.use(bodyParser.urlencoded({extended:true})); // for parsing application/x-www-form-urlencoded
+    this.app.use(multer().array()); // for parsing multipart/form-data
     this.app.use(cookieParser());
   }
 
