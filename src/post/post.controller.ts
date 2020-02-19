@@ -8,7 +8,8 @@ import validationMiddleware from '../middleware/validation.middleware';
 import CreatePostDto from './post.dto';
 import Post from './post.entity';
 
-import { celebrate, Joi } from 'celebrate';
+// import { celebrate, Joi } from 'celebrate';
+// import { Container } from 'typedi';
 
 
 class PostController implements Controller {
@@ -31,6 +32,7 @@ class PostController implements Controller {
   }
 
   private createPost = async (request: RequestWithUser, response: express.Response) => {
+    // const logger = Container.get('logger');
     const postData: CreatePostDto = request.body;
     const newPost = this.postRepository.create({
       ...postData,
@@ -41,19 +43,27 @@ class PostController implements Controller {
     response.send(newPost);
   }
 
-  private getAllPosts = async (request: express.Request, response: express.Response) => {
+  private getAllPosts = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
+    try {
     const posts = await this.postRepository.find({ relations: ['categories'] });
     response.send(posts);
+
+    }catch(e){
+      console.log(e)
+      return e;
+    }
+
+    next();
   }
 
   private getPostById = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
     const id = request.params.id;
     const post = await this.postRepository.findOne(id, { relations: ['categories'] });
-    if (post) {
-      response.send(post);
-    } else {
+    if(!post){
       next(new PostNotFoundException(id));
     }
+      response.send(post);
+    next();
   }
 
   private modifyPost = async (request: express.Request, response: express.Response, next: express.NextFunction) => {

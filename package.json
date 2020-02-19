@@ -2,22 +2,26 @@
   "name": "express-typescript",
   "version": "1.0.0",
   "description": "",
-  "main": "src/server.ts",
+  "main": "src/WAS.ts",
   "dependencies": {
     "bcrypt": "^3.0.8",
     "body-parser": "^1.18.3",
     "class-transformer": "^0.2.0",
     "class-validator": "^0.9.1",
     "cookie-parser": "^1.4.3",
+    "cross-env": "^7.0.0",
     "dotenv": "^6.2.0",
     "envalid": "^4.1.4",
     "express": "^4.16.4",
     "jsonwebtoken": "^8.4.0",
+    "mysql": "^2.18.1",
     "pg": "^7.8.0",
     "reflect-metadata": "^0.1.12",
     "supertest": "^3.4.2",
     "ts-jest": "^23.10.5",
-    "typeorm": "^0.2.11"
+    "typedi": "^0.8.0",
+    "typeorm": "^0.2.11",
+    "winston": "^3.2.1"
   },
   "devDependencies": {
     "@types/bcrypt": "^3.0.0",
@@ -37,6 +41,7 @@
     "typescript": "^3.2.1"
   },
   "scripts": {
+    "start": "nodemon",
     "dev": "ts-node ./src/server.ts",
     "lint": "tslint -p tsconfig.json -c tslint.json",
     "typeorm:cli": "ts-node ./node_modules/typeorm/cli -f ./src/ormconfig.ts",

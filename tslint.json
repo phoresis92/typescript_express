@@ -19,5 +19,10 @@
     "object-literal-sort-keys": false,
     "max-classes-per-file": false
   },
-  "rulesDirectory": []
+  "rulesDirectory": [],
+  "indent": [
+    true, // true || false
+    "tabs", // "spaces" || "tabs"
+    4 // 2 || 4
+  ]
 }

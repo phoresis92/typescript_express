@@ -1,19 +1,35 @@
-import {NextFunction, Request, Response} from 'express';
+import { Request, Response, NextFunction } from 'express';
 import {Container} from 'typedi';
 import LogErr from '../entity/log_error.entity';
 import HttpException from '../exceptions/HttpException';
 
-import {getRepository} from 'typeorm';
+import { getRepository } from 'typeorm';
 
-const errorMiddleware = async (error: HttpException, request: Request, response: Response, next: NextFunction) => {
+const dbLogMiddleware = async (request: Request, response: Response, next: NextFunction) => {
     const logErrRepository = getRepository(LogErr);
 
     const logger = Container.get('logger');
     const config = Container.get('config');
 
+    console.log(response)
+
+
+    response.on('finish', () => {
+        console.log('what?')
+        console.log('what?')
+        console.log('what?')
+        console.log('what?')
+        console.log('what?')
+        console.log('what?')
+        console.log('what?')
+        console.log('what?')
+    })
+
+    next()
+
     try {
         const newLog = logErrRepository.create({
-                                                   status_code: error.status,
+                                                   status_code: response.statusCode,
                                                    server: 1,
                                                    id: 1,
                                                    method: request.method,
@@ -22,7 +38,7 @@ const errorMiddleware = async (error: HttpException, request: Request, response:
                                                    params: JSON.stringify(request.params),
                                                    query: JSON.stringify(request.query),
                                                    payload: JSON.stringify(request.body),
-                                                   response: JSON.stringify(error.stack),
+                                                   response: JSON.stringify(response.body),
                                                    reg_date: new Date(),
                                                });
         await logErrRepository.save(newLog);
@@ -31,16 +47,7 @@ const errorMiddleware = async (error: HttpException, request: Request, response:
 
     }
 
-    logger.error(`[${error.status}]${JSON.stringify(error.stack)}`);
+    logger.info(`[${error.status}]${JSON.stringify(error.stack)}`);
+}
 
-    const status = error.status || 500;
-    const message = error.message || 'Something went wrong';
-    response
-        .status(status)
-        .send({
-                  message,
-                  status,
-              });
-};
-
-export default errorMiddleware;
+export default dbLogMiddleware;

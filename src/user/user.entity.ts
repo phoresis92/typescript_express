@@ -7,8 +7,11 @@ class User {
   @PrimaryGeneratedColumn()
   public id: string;
 
+  // @Column()
+  // public fullName: string;
+
   @Column()
-  public fullName: string;
+  public name: string;
 
   @Column()
   public email: string;

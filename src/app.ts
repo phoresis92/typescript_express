@@ -1,10 +1,14 @@
 import * as bodyParser from 'body-parser';
-import * as cookieParser from 'cookie-parser';
-import * as express from 'express';
+import cookieParser from 'cookie-parser';
+import express from 'express';
+import {Container} from 'typedi';
 import Controller from './interfaces/controller.interface';
 import errorMiddleware from './middleware/error.middleware';
+import logErrMiddleware from './middleware/dblog.middleware';
 
 class App {
+  private logger = Container.get('logger');
+  private config = Container.get('config');
   private app: express.Application;
 
   constructor(controllers: Controller[]) {
@@ -17,7 +21,11 @@ class App {
 
   public listen() {
     this.app.listen(process.env.PORT, () => {
-      console.log(`App listening on the port ${process.env.PORT}`);
+      this.logger.info(`
+      ################################################
+      🛡 Server listening on port: ${this.config.port} 🛡️ 
+      ################################################
+    `);
     });
   }
 
@@ -31,6 +39,7 @@ class App {
   }
 
   private initializeErrorHandling() {
+    this.app.use(logErrMiddleware);
     this.app.use(errorMiddleware);
   }
 

@@ -1,24 +1,16 @@
 import 'dotenv/config';
 import 'reflect-metadata';
-import { createConnection } from 'typeorm';
-import AddressController from './address/address.controller';
 import App from './app';
+
+import AddressController from './address/address.controller';
 import AuthenticationController from './authentication/authentication.controller';
 import CategoryController from './category/category.controller';
-import * as config from './ormconfig';
 import PostController from './post/post.controller';
-import validateEnv from './utils/validateEnv';
 
-validateEnv();
+import loaders from './loaders';
 
 (async () => {
-  try {
-    const connection = await createConnection(config);
-    await connection.runMigrations();
-  } catch (error) {
-    console.log('Error while connecting to the database', error);
-    return error;
-  }
+  await loaders();
   const app = new App(
     [
       new PostController(),
