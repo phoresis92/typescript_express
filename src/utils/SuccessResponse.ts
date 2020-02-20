@@ -1,11 +1,11 @@
-import { NextFunction } from 'express';
+import {NextFunction, Request} from 'express';
 import { Container } from 'typedi';
 import ResponseInterface from '../interfaces/response.interface';
 
 class SuccessResponse implements ResponseInterface{
     private logger = Container.get('logger');
     private config = Container.get('config');
-    constructor(public params: object, private next: NextFunction, public resultData: any, private sucCode: number, private message?: string){
+    constructor(public request: Request, private next: NextFunction, public resultData: any, private sucCode: number, private message?: string){
         this.callNext();
     };
 
@@ -16,7 +16,7 @@ class SuccessResponse implements ResponseInterface{
     public make(){
         return {
             result: true,
-            sucCode: this.sucCode,
+            path: `${this.request.path}/${this.sucCode}`,
             resultData: this.resultData,
             message: (this.config.nodeEnv == 'development' ? this.message : null)
         }

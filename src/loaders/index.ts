@@ -24,16 +24,15 @@ export default async () => {
    * When you use RDB
    * Check your ormConfig
    */
-  let connection;
-  try {
-    connection = await createConnection(ormConfig);
-    await connection.runMigrations();
-  } catch (e) {
-    logger.error('🔥 Error with Connection RDB: %o', e);
-    process.exit(1);
-  }
-  Container.set('ormConnect', connection);
-  logger.info('✌️ DB loaded and connected!');
+  // try {
+  //   const connection = await createConnection(ormConfig);
+  //   await connection.runMigrations();
+  // } catch (e) {
+  //   console.log(e)
+  //   logger.error('🔥 Error with Connection RDB: %o', e);
+  //   process.exit(1);
+  // }
+  // logger.info('✌️ DB loaded and connected!');
 
 
   /**

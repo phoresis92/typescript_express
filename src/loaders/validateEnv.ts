@@ -10,7 +10,9 @@ function validateEnv() {
     RDB_USER: str(),
     RDB_PASSWORD: str(),
     RDB_DB: str(),
-    PORT: port(),
+    WAS_PORT: port(),
+    PTMS_PORT: port(),
+    SERVER: str(),
   });
 }
 

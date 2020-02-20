@@ -10,9 +10,18 @@ if (!envFound) {
   throw new Error("⚠️  Couldn't find .env file  ⚠️");
 }
 
+enum SERVERTYPE {
+  WAS = 'WAS',
+  PTMS = 'PTMS',
+  DFS = 'DFS'
+}
+
 export default {
+  server: process.env.SERVER,
+
+  serverType: SERVERTYPE,
   /**
-   * Service Name
+   * Service Info
    */
   serviceName: process.env.SERVICE_NAME,
 
@@ -21,10 +30,19 @@ export default {
    */
   nodeEnv: process.env.NODE_ENV,
 
+  mysqlHost: process.env.RDB_HOST,
+  mysqlPort: process.env.RDB_PORT,
+  mysqlUser: process.env.RDB_USER,
+  mysqlPassword: process.env.RDB_PASSWORD,
+  mysqlDb: process.env.RDB_DB,
+
+
   /**
    * Your favorite port
    */
-  port: parseInt(process.env.PORT, 10),
+  wasPort: parseInt(process.env.WAS_PORT, 10),
+  ptmsPort: parseInt(process.env.PTMS_PORT, 10),
+  dfsPort: parseInt(process.env.DFS_PORT, 10),
 
   /**
    * That long string from mlab

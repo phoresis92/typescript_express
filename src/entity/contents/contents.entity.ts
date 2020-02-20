@@ -30,6 +30,8 @@ class Contents {
 
   @Column('datetime')
   public reg_date: Date;
+  
+  
 
 }
 

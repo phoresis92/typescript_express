@@ -11,9 +11,11 @@ class App {
   private logger = Container.get('logger');
   private config = Container.get('config');
   private app: express.Application;
+  private port: number
 
   constructor(controllers: Controller[]) {
     this.app = express();
+    this.getPort();
 
     this.initializeMiddlewares();
     this.initializeControllers(controllers);
@@ -24,7 +26,7 @@ class App {
     this.app.listen(process.env.PORT, () => {
       this.logger.info(`
       ################################################
-      🛡 Server listening on port: ${this.config.port} 🛡️ 
+      🛡 Server listening on port: ${this.port} 🛡️ 
       ################################################
     `);
     });
@@ -32,6 +34,20 @@ class App {
 
   public getServer() {
     return this.app;
+  }
+
+  private getPort(){
+    switch (this.config.server) {
+      case this.config.serverType.WAS:
+        this.port = this.config.wasPort
+        break;
+      case this.config.serverType.PTMS:
+        this.port = this.config.ptmsPort
+        break;
+      case this.config.serverType.DFS:
+        this.port = this.config.dfsPort
+        break;
+    }
   }
 
   private initializeMiddlewares() {
@@ -48,7 +64,7 @@ class App {
 
   private initializeControllers(controllers: Controller[]) {
     controllers.forEach((controller) => {
-      this.app.use('/', controller.router);
+      this.app.use(this.config.api.prefix, controller.router);
     });
   }
 }
