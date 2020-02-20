@@ -1,12 +1,6 @@
 import dependencyInjectorLoader from './dependencyInjector';
-// import mongooseLoader from './mongoose';
-// import jobsLoader from './jobs';
 import logger from './logger';
 import validateEnv from './validateEnv';
-
-import {createConnection} from 'typeorm';
-import {Container} from 'typedi';
-import ormConfig from './ormconfig';
 
 export default async () => {
 

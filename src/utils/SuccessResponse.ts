@@ -1,15 +1,20 @@
 import {NextFunction, Request} from 'express';
 import { Container } from 'typedi';
 import ResponseInterface from '../interfaces/response.interface';
+import Config from '../config'
 
 class SuccessResponse implements ResponseInterface{
     private logger = Container.get('logger');
-    private config = Container.get('config');
+    // private config: Config = Container.get('config');
 
+    // public request;
+    // public params;
+    // public next;
     public resultData;
-    private sucCode;
+    public sucCode;
     private message;
-    constructor(public request: Request, public params: object, private next: NextFunction){};
+
+    constructor(public request: Request, public params: object, public next: NextFunction){};
 
     private callNext() {
         this.next(this);
@@ -26,7 +31,7 @@ class SuccessResponse implements ResponseInterface{
             result: true,
             path: `${this.request.path}/${this.sucCode}`,
             resultData: this.resultData,
-            message: (this.config.nodeEnv == 'development' ? this.message : null)
+            message: (Config.nodeEnv == 'development' ? this.message : null)
         }
     }
 

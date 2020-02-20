@@ -1,10 +1,11 @@
 import {Inject} from 'typedi';
+import Mysql from 'mysql';
 
 export default class contentsQuery{
-    constructor(
-        @Inject('mysql')
-        private mysql
-    ){}
+    @Inject('mysql')
+    private mysql: Mysql
+
+    constructor(){}
 
     public create = () => {
         let query =
@@ -14,14 +15,48 @@ export default class contentsQuery{
         return query;
     }
 
-    public bySerial = (page) => {
+    public bySerial = (page, keyword) => {
+        let query =
+            `SELECT *
+            FROM t_nf_contents c
+            WHERE (
+                serial_number = ?
+                OR contents_type = 'NOTICE'
+                )
+                AND status = 50 
+                ${keyword ? `AND (
+                    phone_number LIKE '%${keyword}%'
+                    OR contents LIKE '%${keyword}%'
+                )` : ``}
+            ORDER BY contents_seq DESC 
+            LIMIT ${(page - 1) * 10}, 10 `;
+
+        return query;
+    }
+
+    public search = (page) => {
         let query =
             `SELECT *
             FROM t_nf_contents c
             WHERE serial_number = ?
-                OR contents_type = 'NOTICE'
+                AND (
+                    phone_number LIKE ?
+                    contents LIKE ?
+                )
+                AND status = 50 
             ORDER BY contents_seq DESC 
             LIMIT ${(page - 1) * 10}, 10 `;
+
+        return query;
+    }
+
+    public getBySeqs = () => {
+        let query =
+            `SELECT *
+            FROM t_nf_contents c
+            WHERE c.contents_seq IN ( ? )
+                AND status = 50 
+            ORDER BY contents_seq DESC `;
 
         return query;
     }
@@ -52,6 +87,15 @@ export default class contentsQuery{
             SET target_type = 'CONTENTS',
                 target_key = ? 
             WHERE file_seq IN ( ? )`;
+
+        return query;
+    }
+
+    public delete = () =>{
+        let query =
+            `UPDATE t_nf_contents
+            SET status = 10
+            WHERE contents_seq IN ( ? )`;
 
         return query;
     }

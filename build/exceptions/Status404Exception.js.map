@@ -1,0 +1,1 @@
+{"version":3,"file":"Status404Exception.js","sourceRoot":"","sources":["../../src/exceptions/Status404Exception.ts"],"names":[],"mappings":";;;;;AAAA,oEAA4C;AAE5C,MAAM,kBAAmB,SAAQ,uBAAa;IAC1C,YAAY,MAAM;QACd,KAAK,CAAC,GAAG,EAAE,iBAAiB,EAAE,MAAM,CAAC,CAAC;IAC1C,CAAC;CACJ;AAED,kBAAe,kBAAkB,CAAC"}

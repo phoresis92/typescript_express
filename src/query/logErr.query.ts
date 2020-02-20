@@ -1,10 +1,10 @@
 import {Inject} from 'typedi';
 
 export default class contentsQuery{
-    constructor(
-        @Inject('mysql')
-        private mysql
-    ){}
+    @Inject('mysql')
+    private mysql
+
+    constructor(){}
 
     public create = () => {
         let query =

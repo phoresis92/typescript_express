@@ -91,3 +91,4 @@ export default {
     domain: 'Domain Name from mailgun'
   }
 };
+

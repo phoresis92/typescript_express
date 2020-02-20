@@ -1,6 +1,6 @@
 import { Column, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import Category from '../category/category.entity';
-import User from '../user/user.entity';
+// import Category from '../category/category.entity';
+// import User from '../user/user.entity';
 
 enum contentsType {
   NOTICE = "NOTICE",

@@ -3,15 +3,16 @@ import cookieParser from 'cookie-parser';
 import multer from 'multer';
 import express, {NextFunction, Request, Response} from 'express';
 import {Container} from 'typedi';
-import HttpException from './exceptions/HttpException';
+// import HttpException from './exceptions/HttpException';
 import Status404Exception from './exceptions/Status404Exception';
 import Controller from './interfaces/controller.interface';
 import errorMiddleware from './middleware/error.middleware';
 import logErrMiddleware from './middleware/dblog.middleware';
+import {Logger} from "winston";
+import Config from "./config/index";
 
 class App {
-  private logger = Container.get('logger');
-  private config = Container.get('config');
+  private logger: Logger = Container.get('logger');
   private app: express.Application;
   private port: number
 
@@ -40,15 +41,15 @@ class App {
   }
 
   private getPort(){
-    switch (this.config.server) {
-      case this.config.serverType.WAS:
-        this.port = this.config.wasPort
+    switch (Config.server) {
+      case Config.serverType.WAS:
+        this.port = Config.wasPort;
         break;
-      case this.config.serverType.PTMS:
-        this.port = this.config.ptmsPort
+      case Config.serverType.PTMS:
+        this.port = Config.ptmsPort;
         break;
-      case this.config.serverType.DFS:
-        this.port = this.config.dfsPort
+      case Config.serverType.DFS:
+        this.port = Config.dfsPort;
         break;
     }
   }
@@ -67,7 +68,7 @@ class App {
 
   private initializeControllers(controllers: Controller[]) {
     controllers.forEach((controller) => {
-      this.app.use(this.config.api.prefix, controller.router);
+      this.app.use(Config.api.prefix, controller.router);
     });
   }
 

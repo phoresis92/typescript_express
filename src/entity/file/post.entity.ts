@@ -1,6 +1,6 @@
 import { Column, Entity, JoinTable, OneToMany, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import Category from '../category/category.entity';
-import User from '../user/user.entity';
+// import Category from '../category/category.entity';
+// import User from '../user/user.entity';
 
 enum fileType {
     IMG = 'IMG',
@@ -11,7 +11,7 @@ enum fileType {
 class Post {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    length: 20
+    // length: 20
   })
   public file_seq?: bigint;
 
@@ -63,16 +63,16 @@ class Post {
   @Column({type: 'int', length: 11})
   public thumb_heigth: number;
 
-  @Column({length: 11})
-  public file_width: number;
+  // @Column({length: 11})
+  // public file_width: number;
 
 
-  @ManyToOne(() => User, (author: User) => author.posts)
-  public author: User;
-
-  @ManyToMany(() => Category, (category: Category) => category.posts)
-  @JoinTable()
-  public categories: Category[];
+  // @ManyToOne(() => User, (author: User) => author.posts)
+  // public author: User;
+  //
+  // @ManyToMany(() => Category, (category: Category) => category.posts)
+  // @JoinTable()
+  // public categories: Category[];
 }
 
 export default Post;

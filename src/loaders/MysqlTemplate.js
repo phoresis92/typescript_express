@@ -26,34 +26,43 @@ var DbConfig2 = {
 
 DbConfig2.multipleStatements = true;
 
-var pool= Mysql.createPool(DbConfig2);
-var pool2= Mysql.createPool(DbConfig);
+var pool = Mysql.createPool(DbConfig2);
+var pool2 = Mysql.createPool(DbConfig);
 
 exports.escape = Mysql.escape;
 
-exports.get = function(query, next) {
-    return new Promise((resolve, reject)=>{
-        if(!query){
+exports.get = function (query, next) {
+    return new Promise((resolve, reject) => {
+        if (!query) {
             resolve([]);
         }
         try {
             var strQuery = query.join(';');
 
-            pool.getConnection(function(err,conn) {
+            pool.getConnection(function (err, conn) {
                 if (err) {
                     console.log('getConn : ', query);
                     //logger.error("poolConnect:"+err);
-                    try { conn.release(); } catch (e) { } //logger.error("poolConnect conn.release:"+e); }
+                    try {
+                        conn.release();
+                    } catch (e) {
+                    } //logger.error("poolConnect conn.release:"+e); }
                     throw err;
                 }
-                conn.query(strQuery, function(err,rows) {
+                conn.query(strQuery, function (err, rows) {
                     if (err) {
                         console.log('queryErr : ', query);
-                        try { conn.release(); } catch (e) { } //logger.error("poolClose:"+e); }
+                        try {
+                            conn.release();
+                        } catch (e) {
+                        } //logger.error("poolClose:"+e); }
                         throw err;
                     } else {
-                        try { conn.release(); } catch (e) { } //logger.error("poolClose:"+e); }
-                        if(query.length === 1){
+                        try {
+                            conn.release();
+                        } catch (e) {
+                        } //logger.error("poolClose:"+e); }
+                        if (query.length === 1) {
                             rows = [rows]
                         }
                         resolve(rows)
@@ -69,23 +78,32 @@ exports.get = function(query, next) {
 
 };
 
-exports.getSingle = function(query, next) {
+exports.getSingle = function (query, next) {
 
     try {
-        pool2.getConnection(function(err,conn) {
+        pool2.getConnection(function (err, conn) {
             if (err) {
                 console.log('getConn : ', query);
                 //logger.error("poolConnect:"+err);
-                try { conn.release(); } catch (e) { } //logger.error("poolConnect conn.release:"+e); }
+                try {
+                    conn.release();
+                } catch (e) {
+                } //logger.error("poolConnect conn.release:"+e); }
                 throw err;
             }
-            conn.query(query, function(err,rows) {
+            conn.query(query, function (err, rows) {
                 if (err) {
                     console.log('queryErr : ', query);
-                    try { conn.release(); } catch (e) { } //logger.error("poolClose:"+e); }
+                    try {
+                        conn.release();
+                    } catch (e) {
+                    } //logger.error("poolClose:"+e); }
                     throw err;
                 } else {
-                    try { conn.release(); } catch (e) { } //logger.error("poolClose:"+e); }
+                    try {
+                        conn.release();
+                    } catch (e) {
+                    } //logger.error("poolClose:"+e); }
                     next(rows);
                 }
             });
@@ -96,20 +114,29 @@ exports.getSingle = function(query, next) {
     }
 };
 
-exports.exec = function(query, params, next) {
-    return new Promise((resolve, reject)=>{
+exports.exec = function (query, params, next) {
+    return new Promise((resolve, reject) => {
         try {
-            pool.getConnection(function(err,conn) {
+            pool.getConnection(function (err, conn) {
                 if (err) {
-                    try { conn.release(); } catch (e) { } //logger.error("poolConnect conn.release:"+e); }
+                    try {
+                        conn.release();
+                    } catch (e) {
+                    } //logger.error("poolConnect conn.release:"+e); }
                     throw err;
                 }
-                conn.query(query, params, function(err, result) {
+                conn.query(query, params, function (err, result) {
                     if (err) {
-                        try { conn.release(); } catch (e) { } //logger.error("poolClose:"+e); }
+                        try {
+                            conn.release();
+                        } catch (e) {
+                        } //logger.error("poolClose:"+e); }
                         throw err;
                     } else {
-                        try { conn.release(); } catch (e) { } //logger.error("poolClose:"+e); }
+                        try {
+                            conn.release();
+                        } catch (e) {
+                        } //logger.error("poolClose:"+e); }
                         // next(result);
                         resolve(result)
                     }
@@ -127,63 +154,78 @@ exports.exec = function(query, params, next) {
 };
 
 // 트랜젝션 : 실패시 롤백, 성공시 커밋
-exports.commit = function(query, next) {
+exports.commit = function (query, next) {
     return new Promise((resolve, reject) => {
-    var strQuery = query;
-    if(Array.isArray(query))
-        strQuery = query.join(';');
+        var strQuery = query;
+        if (Array.isArray(query))
+            strQuery = query.join(';');
 
-    try {
-        pool.getConnection(function(err,conn) {
-            if (err) {
-                try { conn.release(); } catch (e) { }
-                throw err;
-            }
-            conn.beginTransaction(function(err) {
-                if(err) {
+        try {
+            pool.getConnection(function (err, conn) {
+                if (err) {
+                    try {
+                        conn.release();
+                    } catch (e) {
+                    }
                     throw err;
                 }
-
-                conn.query(strQuery, function(err, result) {
+                conn.beginTransaction(function (err) {
                     if (err) {
-                        conn.rollback(function() {
-                            try { conn.release(); } catch (e) { }
-                            throw err;
-                        });
+                        throw err;
                     }
 
-                    if((!Array.isArray(query) && Array.isArray(result[0])) || (Array.isArray(query) && query.length > 1 && query.length !== result.length)) {
-                        conn.rollback(function() {
-                            var nowTime = moment().format('YYYY-MM-DD hh:mm:ss');
-                            console.log('Warning! Detecting query attack [', nowTime, '] -', strQuery);
+                    conn.query(strQuery, function (err, result) {
+                        if (err) {
+                            conn.rollback(function () {
+                                try {
+                                    conn.release();
+                                } catch (e) {
+                                }
+                                throw err;
+                            });
+                        }
 
-                            try { conn.release(); } catch (e) { }
-                            throw err;
-                        });
+                        if ((!Array.isArray(query) && Array.isArray(result[0])) || (Array.isArray(query) && query.length > 1 && query.length !== result.length)) {
+                            conn.rollback(function () {
+                                var nowTime = moment().format('YYYY-MM-DD hh:mm:ss');
+                                console.log('Warning! Detecting query attack [', nowTime, '] -', strQuery);
 
-                    } else {
-                        conn.commit(function (err) {
-                            if (err) {
-                                conn.rollback(function () {
-                                    try { conn.release(); } catch (e) { }
-                                    throw err;
-                                });
+                                try {
+                                    conn.release();
+                                } catch (e) {
+                                }
+                                throw err;
+                            });
 
-                            } else {
-                                try { conn.release(); } catch (e) { }
-                                resolve(result)
-                            }
-                        });
-                    }
+                        } else {
+                            conn.commit(function (err) {
+                                if (err) {
+                                    conn.rollback(function () {
+                                        try {
+                                            conn.release();
+                                        } catch (e) {
+                                        }
+                                        throw err;
+                                    });
+
+                                } else {
+                                    try {
+                                        conn.release();
+                                    } catch (e) {
+                                    }
+                                    resolve(result)
+                                }
+                            });
+                        }
+                    });
                 });
             });
-        });
 
-    } catch (e) {
-        console.log(query);
-        reject(e)
+        } catch (e) {
+            console.log(query);
+            reject(e)
 
-    }
+        }
 
     })
 
