@@ -5,6 +5,7 @@ import logger from './logger';
 import validateEnv from './validateEnv';
 
 import {createConnection} from 'typeorm';
+import {Container} from 'typedi';
 import ormConfig from './ormconfig';
 
 export default async () => {
@@ -23,13 +24,15 @@ export default async () => {
    * When you use RDB
    * Check your ormConfig
    */
+  let connection;
   try {
-    const connection = await createConnection(ormConfig);
+    connection = await createConnection(ormConfig);
     await connection.runMigrations();
   } catch (e) {
     logger.error('🔥 Error with Connection RDB: %o', e);
     process.exit(1);
   }
+  Container.set('ormConnect', connection);
   logger.info('✌️ DB loaded and connected!');
 
 

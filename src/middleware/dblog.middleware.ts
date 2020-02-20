@@ -1,13 +1,13 @@
 import {Request, Response, NextFunction} from 'express';
 import {Container} from 'typedi';
 import LogErr from '../entity/log/log_error.entity';
-import HttpException from '../exceptions/HttpException';
+// import HttpException from '../exceptions/HttpException';
 import { SuccessResponse } from '../utils';
 
 import {getRepository} from 'typeorm';
 
-const dbLogMiddleware = async (nextData: SuccessResponse|HttpException, request: Request, response: Response, next: NextFunction) => {
-    if (nextData instanceof HttpException) {
+const dbLogMiddleware = async (nextData: SuccessResponse|Error, request: Request, response: Response, next: NextFunction) => {
+    if (nextData instanceof Error) {
         next(nextData);
         return;
     }

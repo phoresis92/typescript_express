@@ -8,7 +8,7 @@ import validationMiddleware from '../middleware/validation.middleware';
 import CreatePostDto from './post.dto';
 import Post from './post.entity';
 
-import success from '../utils/Success'
+import success from '../utils/SuccessResponse'
 
 // import { celebrate, Joi } from 'celebrate';
 // import { Container } from 'typedi';
@@ -48,7 +48,7 @@ class PostController implements Controller {
   private getAllPosts = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
     try {
     const posts = await this.postRepository.find({ relations: ['categories'] });
-    response.send(new success(request.params, next, posts, 1, `wowowoww`).resultObj());
+    response.send(new success(request.params, next, posts, 1, `wowowoww`).make());
 
     }catch(e){
       console.log(e)
@@ -67,7 +67,7 @@ class PostController implements Controller {
       next(new PostNotFoundException(id));
       return;
     }
-      response.send(new success(request.params, next, post, 1, `here?`).resultObj());
+      response.send(new success(request.params, next, post, 1, `here?`).make());
 
   }
 

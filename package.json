@@ -8,6 +8,7 @@
     "@typescript-eslint/parser": "^2.20.0",
     "bcrypt": "^3.0.8",
     "body-parser": "^1.18.3",
+    "celebrate": "^11.0.1",
     "class-transformer": "^0.2.0",
     "class-validator": "^0.9.1",
     "cookie-parser": "^1.4.3",

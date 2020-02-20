@@ -6,6 +6,7 @@ import AddressController from './address/address.controller';
 import AuthenticationController from './authentication/authentication.controller';
 import CategoryController from './category/category.controller';
 import PostController from './post/post.controller';
+import ContentsController from './contents/contents.controller';
 
 import loaders from './loaders';
 
@@ -17,6 +18,7 @@ import loaders from './loaders';
       new AuthenticationController(),
       new AddressController(),
       new CategoryController(),
+      new ContentsController(),
     ],
   );
   app.listen();

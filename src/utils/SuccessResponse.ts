@@ -1,8 +1,8 @@
 import { NextFunction } from 'express';
 import { Container } from 'typedi';
-import responseInterface from '../interfaces/response.interface';
+import ResponseInterface from '../interfaces/response.interface';
 
-class SuccessResponse implements responseInterface{
+class SuccessResponse implements ResponseInterface{
     private logger = Container.get('logger');
     private config = Container.get('config');
     constructor(public params: object, private next: NextFunction, public resultData: any, private sucCode: number, private message?: string){
@@ -13,7 +13,7 @@ class SuccessResponse implements responseInterface{
         this.next(this);
     };
 
-    public resultObj(){
+    public make(){
         return {
             result: true,
             sucCode: this.sucCode,
@@ -21,7 +21,6 @@ class SuccessResponse implements responseInterface{
             message: (this.config.nodeEnv == 'development' ? this.message : null)
         }
     }
-
 
 };
 
