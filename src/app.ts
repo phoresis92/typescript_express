@@ -1,8 +1,10 @@
 import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import multer from 'multer';
-import express from 'express';
+import express, {NextFunction, Request, Response} from 'express';
 import {Container} from 'typedi';
+import HttpException from './exceptions/HttpException';
+import Status404Exception from './exceptions/Status404Exception';
 import Controller from './interfaces/controller.interface';
 import errorMiddleware from './middleware/error.middleware';
 import logErrMiddleware from './middleware/dblog.middleware';
@@ -19,11 +21,12 @@ class App {
 
     this.initializeMiddlewares();
     this.initializeControllers(controllers);
+    this.InvalidAddress404();
     this.initializeErrorHandling();
   }
 
   public listen() {
-    this.app.listen(process.env.PORT, () => {
+    this.app.listen(this.port, () => {
       this.logger.info(`
       ################################################
       🛡 Server listening on port: ${this.port} 🛡️ 
@@ -66,6 +69,30 @@ class App {
     controllers.forEach((controller) => {
       this.app.use(this.config.api.prefix, controller.router);
     });
+  }
+
+  private InvalidAddress404 (){
+    this.app.get('*', async (request: Request, response: Response, next: NextFunction)=>{
+      next(new Status404Exception(request.params));
+    })
+        .post('*', async (request: Request, response: Response, next: NextFunction)=>{
+          next(new Status404Exception(request.params));
+        })
+        .delete('*', async (request: Request, response: Response, next: NextFunction)=>{
+          next(new Status404Exception(request.params));
+        })
+        .put('*', async (request: Request, response: Response, next: NextFunction)=>{
+          next(new Status404Exception(request.params));
+        })
+        .patch('*', async (request: Request, response: Response, next: NextFunction)=>{
+          next(new Status404Exception(request.params));
+        })
+        .head('*', async (request: Request, response: Response, next: NextFunction)=>{
+          next(new Status404Exception(request.params));
+        })
+        .options('*', async (request: Request, response: Response, next: NextFunction)=>{
+          next(new Status404Exception(request.params));
+        })
   }
 }
 

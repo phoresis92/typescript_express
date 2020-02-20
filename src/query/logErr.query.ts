@@ -8,8 +8,20 @@ export default class contentsQuery{
 
     public create = () => {
         let query =
-            `INSERT INTO t_nf_log_error (status_code, server, id, method, path, header, params, query, payload, response)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) `;
+            `INSERT INTO t_nf_log_error 
+            (
+                status_code, server, id, 
+                method, path, header, 
+                params, query, payload, 
+                response
+            )
+            VALUES 
+            (
+            ?, ?, ?, 
+            ?, ?, ?, 
+            ?, ?, ?, 
+            ?
+            ) `;
 
         return query;
     }

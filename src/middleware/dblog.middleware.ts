@@ -1,27 +1,40 @@
 import {Request, Response, NextFunction} from 'express';
 import {Container} from 'typedi';
+import LogErr from '../entity/log/log_error.entity';
 // import LogErr from '../entity/log/log_error.entity';
 // import HttpException from '../exceptions/HttpException';
-import { SuccessResponse } from '../utils';
-import { logErrQuery } from '../query';
+import {SuccessResponse} from '../utils';
+import {LogErrQuery} from '../query';
 
 import {getRepository} from 'typeorm';
 
-const dbLogMiddleware = async (nextData: SuccessResponse|Error, request: Request, response: Response, next: NextFunction) => {
+const dbLogMiddleware = async (nextData: SuccessResponse | Error, request: Request, response: Response, next: NextFunction) => {
     if (nextData instanceof Error) {
         next(nextData);
         return;
     }
-    
+
     // const logErrRepository = getRepository(LogErr);
 
     const logger = Container.get('logger');
     const config = Container.get('config');
     const mysql = Container.get('mysql');
-    logErrQuery
+    const logErrQuery = new LogErrQuery();
 
     try {
-        mysql.exec()
+        const recordSet = await mysql.exec(logErrQuery.create(),
+                   [
+                       response.statusCode,
+                       config.server,
+                       1,
+                       request.method,
+                       request.path,
+                       JSON.stringify(request.headers),
+                       JSON.stringify(nextData.params),
+                       JSON.stringify(request.query),
+                       JSON.stringify(request.body),
+                       JSON.stringify(nextData.resultData)
+                   ]);
         // const newLog = logErrRepository.create
         // ({
         //      status_code: response.statusCode,

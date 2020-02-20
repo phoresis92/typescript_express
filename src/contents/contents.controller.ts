@@ -37,7 +37,7 @@ class ContentsController implements Controller {
                                 page: Joi.number().integer()
                             }),
                         }), this.getContentsBySerial)
-            .get(`${this.path}/notice`, this.getNotice)
+            .get(`${this.path}/notice/:test`, this.getNotice)
             .post(`${this.path}`,
                   celebrate({
                       body: Joi.object({
@@ -61,42 +61,48 @@ class ContentsController implements Controller {
         const fileSeqs = request.body.fileSeqs;
 
         try{
-        const contentsService = Container.get(ContentsService);
-        const {recordSet, updateResult} = await contentsService.create(serialNumber, phoneNumber, fileSeqs, next);
+            const contentsService = Container.get(ContentsService);
+            const {recordSet, updateResult} = await contentsService.create(serialNumber, phoneNumber, fileSeqs, next);
 
-        response.send(new success(request, next, {}, 1).make());
+            response.send(new success(request, request.params, next).make({}, 1));
         }catch(e){
             this.logger.error(e.stack());
-            next(new HttpException(500, e.message));
+            next(new HttpException(500, e.message, request.params));
         }
 
     };
 
     private getContentsBySerial = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
-        console.log(request.body);
-        console.log(request.params);
-        console.log(request.query);
         const serialNumber = request.body.serialNumber;
         const page = request.body.page;
 
-        const contentsService = Container.get(ContentsService);
-        const {contents, imgFile} = await contentsService.getBySerial(serialNumber, page);
+        try{
+            const contentsService = Container.get(ContentsService);
+            const {contents, imgFile} = await contentsService.getBySerial(serialNumber, page);
 
-        if (!contents) {
-            next(new PostNotFoundException(serialNumber));
-            return;
+            response.send(new success(request, request.params, next).make({contents, imgFile}, 1));
+            if (!contents) {
+                next(new PostNotFoundException(serialNumber));
+                return;
+            }
+        }catch(e){
+            this.logger.error(e.stack());
+            next(new HttpException(500, e.message, request.params))
         }
-
-        response.send(new success(request, next, {contents, imgFile}, 1).make());
 
     };
 
     private getNotice = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
-        const contentsService = Container.get(ContentsService);
-        const {notice, imgFile} = await contentsService.getNotice();
+        try{
+            const contentsService = Container.get(ContentsService);
+            const {notice, imgFile} = await contentsService.getNotice();
+            next(new HttpException(500, 'wrwerwr', request.params))
 
-        response.send(new success(request, next, {notice, imgFile}, 1).make());
-
+            // response.send(new success(request, request.params, next).make({notice, imgFile}, 1));
+        }catch(e){
+            this.logger.error(e.stack());
+            next(new HttpException(500, e.message, request.params))
+        }
     };
 
 }

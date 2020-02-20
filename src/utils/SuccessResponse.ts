@@ -5,15 +5,23 @@ import ResponseInterface from '../interfaces/response.interface';
 class SuccessResponse implements ResponseInterface{
     private logger = Container.get('logger');
     private config = Container.get('config');
-    constructor(public request: Request, private next: NextFunction, public resultData: any, private sucCode: number, private message?: string){
-        this.callNext();
-    };
+
+    public resultData;
+    private sucCode;
+    private message;
+    constructor(public request: Request, public params: object, private next: NextFunction){};
 
     private callNext() {
         this.next(this);
     };
 
-    public make(){
+    public make(resultData: any, sucCode: number, message?: string){
+        this.resultData = resultData;
+        this.sucCode = sucCode;
+        this.message = message;
+
+        this.callNext();
+
         return {
             result: true,
             path: `${this.request.path}/${this.sucCode}`,
