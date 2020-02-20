@@ -14,7 +14,6 @@ const errorMiddleware = async (error: HttpException, request: Request, response:
     const mysql = Container.get('mysql');
     const logErrQuery = new LogErrQuery();
 
-    console.log(error)
 
     try {
         const recordSet = await mysql.exec(logErrQuery.create(),
@@ -30,7 +29,6 @@ const errorMiddleware = async (error: HttpException, request: Request, response:
                                                JSON.stringify(request.body),
                                                JSON.stringify(error.stack)
                                            ]);
-        console.log(recordSet)
     //     const newLog = logErrRepository.create({
     //                                                status_code: error.status,
     //                                                server: 1,
@@ -50,26 +48,10 @@ const errorMiddleware = async (error: HttpException, request: Request, response:
 
     }
 
-    logger.error(`[${error.status}]${JSON.stringify(error.stack)}`);
+    logger.error(`[${error.status}|${request.method}|${request.path}]${JSON.stringify(error.stack)}`);
 
     const status = error.status || 500;
     const message = error.message || 'Something went wrong';
-    console.log(status)
-    console.log(status)
-    console.log(status)
-    console.log(status)
-    console.log(status)
-    console.log(status)
-    console.log(status)
-    console.log(status)
-    console.log(status)
-    console.log(status)
-    console.log(status)
-    console.log(status)
-    console.log(status)
-    console.log(status)
-    console.log(status)
-    console.log(status)
     response
         .status(status)
         .send({

@@ -50,7 +50,7 @@ const dbLogMiddleware = async (nextData: SuccessResponse | Error, request: Reque
         //      reg_date: new Date(),
         //  });
         // await logErrRepository.save(newLog);
-        logger.info(`[${response.statusCode}]${JSON.stringify(nextData.resultData)}`);
+        logger.info(`[${response.statusCode}|${request.method}|${request.path}]${JSON.stringify(nextData.resultData)}`);
 
     } catch (e) {
         logger.error(e);
