@@ -58,10 +58,5 @@
     "test": "jest"
   },
   "author": "Marcin Wanago",
-  "license": "MIT",
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run lint"
-    }
-  }
+  "license": "MIT"
 }
