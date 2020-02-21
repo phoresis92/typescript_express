@@ -2,8 +2,10 @@ import 'dotenv/config';
 import 'reflect-metadata';
 import App from './app';
 
-import ContentsController from './contents/contents.controller';
-import ContentsAdminController from './contents.admin/contents.admin.controller';
+import ContentsController from './api/contents/contents.controller';
+import ContentsAdminController from './api/contents.admin/contents.admin.controller';
+import VersionController from './api/version/version.controller';
+import LoginController from './api/login/login.controller';
 
 import loaders from './loaders';
 
@@ -13,6 +15,8 @@ import loaders from './loaders';
         [
             new ContentsController(),
             new ContentsAdminController(),
+            new VersionController(),
+            new LoginController(),
         ],
     );
 

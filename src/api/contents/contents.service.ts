@@ -1,6 +1,7 @@
 import {getRepository} from 'typeorm';
-import Contents from '../entity/contents/contents.entity';
-import Utils from '../utils/utils';
+import Contents from '../../entity/contents/contents.entity';
+import ErrorResponse from '../../exceptions/ErrorResponse';
+import Utils from '../../utils/utils';
 import {NextFunction} from "express";
 // import * as express from "./post.controller";
 // import CreatePostDto from "./post.dto";
@@ -11,13 +12,12 @@ import contentsQuery from './contents.query';
 
 import {Container, Service, Inject} from 'typedi';
 import {Logger} from "winston";
-import HttpException from "../exceptions/HttpException";
+import HttpException from "../../exceptions/HttpException";
 
 enum contentsType {
     NOTICE = 'NOTICE',
     CONTENTS = 'CONTENTS'
 }
-
 
 @Service()
 export default class ContentsService {
@@ -31,17 +31,17 @@ export default class ContentsService {
     private Query;
 
     constructor() {
-        this.Query = new contentsQuery()
+        this.Query = new contentsQuery();
     };
 
     public getBySerial = async (serialNumber: string, keyword, page: number) => {
         const contents = await this.mysql.exec(this.Query.bySerial(page, keyword), [serialNumber]);
 
-        let imgFile
+        let imgFile;
         if (contents.length !== 0) {
             let query = [];
             contents.map((val, idx) => {
-                query.push(this.Query.imgFile(val.contents_seq))
+                query.push(this.Query.imgFile(val.contents_seq));
             });
 
             imgFile = await this.mysql.get(query);
@@ -60,17 +60,17 @@ export default class ContentsService {
         //     skip: (page - 1) * 10,
         //     take: 10,
         // });
-        return {contents, imgFile}
-    }
+        return {contents, imgFile};
+    };
 
     public searchContents = async (serialNumber: string, keyword: string, page: number) => {
         const contents = await this.mysql.exec(this.Query.search(page), [serialNumber, `%${keyword}%`, `%${keyword}%`]);
 
-        let imgFile
+        let imgFile;
         if (contents.length !== 0) {
             let query = [];
             contents.map((val, idx) => {
-                query.push(this.Query.imgFile(val.contents_seq))
+                query.push(this.Query.imgFile(val.contents_seq));
             });
 
             imgFile = await this.mysql.get(query);
@@ -89,8 +89,8 @@ export default class ContentsService {
         //     skip: (page - 1) * 10,
         //     take: 10,
         // });
-        return {contents, imgFile}
-    }
+        return {contents, imgFile};
+    };
 
     public getNotice = async () => {
 
@@ -105,64 +105,50 @@ export default class ContentsService {
             imgFile = null;
         }
 
-        return {notice, imgFile}
-    }
+        return {notice, imgFile};
+    };
 
     public create = async (serialNumber: string, phoneNumber: string, fileSeqs: string, next: NextFunction) => {
 
         let recordSet;
         let updateResult;
 
-        try {
-            recordSet = await this.mysql.exec(this.Query.create(), [serialNumber, phoneNumber]);
+        recordSet = await this.mysql.exec(this.Query.create(), [serialNumber, phoneNumber]);
 
-            console.log(recordSet);
-            console.log(recordSet.affectedRows);
-            console.log(recordSet.insertId);
+        console.log(recordSet);
+        console.log(recordSet.affectedRows);
+        console.log(recordSet.insertId);
 
-            let fileSeqArr = this.Utils.makeArray(fileSeqs, ',');
-            console.log(fileSeqArr);
+        let fileSeqArr = this.Utils.makeArray(fileSeqs, ',');
+        console.log(fileSeqArr);
 
-            updateResult = await this.mysql.exec(this.Query.updateFile(), [recordSet.insertId, fileSeqArr])
-            console.log(updateResult)
-        } catch (e) {
-            this.logger.error(e.stack());
-            throw new Error(e)
-        }
+        updateResult = await this.mysql.exec(this.Query.updateFile(), [recordSet.insertId, fileSeqArr]);
+        console.log(updateResult);
 
-        return {recordSet, updateResult}
-    }
+        return {recordSet, updateResult};
+    };
 
     public delete = async (serialNumber: string, contentsSeqs: string, next: NextFunction) => {
         const seqArray = this.Utils.makeArray(contentsSeqs, ',');
         let recordSet;
         let updateResult;
 
-        try {
-            recordSet = await this.mysql.exec(this.Query.getBySeqs(), [seqArray]);
+        recordSet = await this.mysql.exec(this.Query.getBySeqs(), [seqArray]);
 
-            if (seqArray.length !== recordSet.length) {
-                throw new Error("already deleted");
-            }
-
-            recordSet.map((val, idx) => {
-                if (val.serial_number !== serialNumber) {
-                    throw new Error("not mine");
-                }
-            })
-
-            updateResult = await this.mysql.exec(this.Query.delete(), [seqArray])
-
-            console.log(updateResult);
-
-        } catch (e) {
-            this.logger.error(e.message);
-            // next(new Error(e));
-            throw new Error(e);
-            return;
+        if (seqArray.length !== recordSet.length) {
+            throw new ErrorResponse(404, 'already deleted', 1);
         }
 
-        return {recordSet, updateResult}
-    }
+        recordSet.map((val, idx) => {
+            if (val.serial_number !== serialNumber) {
+                throw new ErrorResponse(403, 'not mine', 2);
+            }
+        });
+
+        updateResult = await this.mysql.exec(this.Query.delete(), [seqArray]);
+
+        return {recordSet, updateResult};
+
+    };
 
 }

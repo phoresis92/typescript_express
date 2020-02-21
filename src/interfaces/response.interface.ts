@@ -2,7 +2,7 @@ import { NextFunction } from 'express';
 
 interface Response {
   resultData: any;
-  sucCode: number;
+  responseCode: number;
   params: object;
   next: NextFunction;
 }

@@ -11,29 +11,28 @@ import {Logger} from "winston";
 
 const errorMiddleware = async (error: HttpException, request: Request, response: Response, next: NextFunction) => {
     // const logErrRepository = getRepository(LogErr);
-
     const logger: Logger = Container.get('logger');
     const mysql: Mysql = Container.get('mysql');
     const logErrQuery = new LogErrQuery();
 
-    const status = error.status || 400;
+    const status = error.status || 500;
     const message = error.message || 'Something went wrong';
     const params = error.params || {};
 
     try {
         const recordSet = await mysql.exec(logErrQuery.create(),
-            [
-                status,
-                Config.server,
-                1,
-                request.method,
-                request.path,
-                JSON.stringify(request.headers),
-                JSON.stringify(params),
-                JSON.stringify(request.query),
-                JSON.stringify(request.body),
-                JSON.stringify(message)
-            ]);
+                                           [
+                                               status,
+                                               Config.server,
+                                               1,
+                                               request.method,
+                                               request.path,
+                                               JSON.stringify(request.headers),
+                                               JSON.stringify(params),
+                                               JSON.stringify(request.query),
+                                               JSON.stringify(request.body),
+                                               JSON.stringify(message)
+                                           ]);
         //     const newLog = logErrRepository.create({
         //                                                status_code: error.status,
         //                                                server: 1,
@@ -55,12 +54,15 @@ const errorMiddleware = async (error: HttpException, request: Request, response:
 
     logger.error(`[${error.status}|${request.method}|${request.path}]${JSON.stringify(error.stack)}`);
 
-    response
-        .status(status)
-        .send({
-            message,
-            status,
-        });
+    if (!response.finished) {
+        response
+            .status(status)
+            .send({
+                      message,
+                      status,
+                  });
+
+    }
 };
 
 export default errorMiddleware;

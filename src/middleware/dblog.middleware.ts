@@ -17,10 +17,8 @@ const dbLogMiddleware = async (nextData: SuccessResponse | Error, request: Reque
         return;
     }
 
-    // const logErrRepository = getRepository(LogErr);
 
     const logger: Logger = Container.get('logger');
-    // const config = Container.get('config');
     const mysql: Mysql = Container.get('mysql');
     const logErrQuery = new LogErrQuery();
 

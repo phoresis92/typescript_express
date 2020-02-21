@@ -2,7 +2,7 @@ import 'dotenv/config';
 import 'reflect-metadata';
 import App from './app';
 
-import ContentsAdminController from './contents.admin/contents.admin.controller';
+import ContentsAdminController from './api/contents.admin/contents.admin.controller';
 
 import loaders from './loaders';
 

@@ -1,7 +1,8 @@
 import {getRepository} from 'typeorm';
-import Contents from '../entity/contents/contents.entity';
-import Utils from '../utils/utils';
-import { NextFunction } from "express";
+import Contents from '../../entity/contents/contents.entity';
+import ErrorResponse from '../../exceptions/ErrorResponse';
+import Utils from '../../utils/utils';
+import {NextFunction} from "express";
 // import * as express from "./post.controller";
 // import CreatePostDto from "./post.dto";
 // import PostNotFoundException from "../exceptions/PostNotFoundException";
@@ -9,13 +10,12 @@ import { NextFunction } from "express";
 
 import contentsQuery from './contents.admin.query';
 
-import { Container, Service, Inject } from 'typedi';
+import {Container, Service, Inject} from 'typedi';
 
 enum contentsType {
     NOTICE = 'NOTICE',
     CONTENTS = 'CONTENTS'
 }
-
 
 @Service('ContentsAdminService')
 export default class ContentsAdminService {
@@ -28,24 +28,23 @@ export default class ContentsAdminService {
 
     private ContentsAdminQuery = new contentsQuery();
 
-    constructor(){
-        console.log('ContentsAdminService', 'constructor')
+    constructor() {
+        console.log('ContentsAdminService', 'constructor');
     };
 
     public getAll = async (page: number, keyword: string) => {
-        try {
 
         const contents = await this.mysql.exec(this.ContentsAdminQuery.all(page, keyword));
 
-        let imgFile
-        if(contents.length !== 0){
+        let imgFile;
+        if (contents.length !== 0) {
             let query = [];
-            contents.map((val, idx)=>{
-                query.push(this.ContentsAdminQuery.imgFile(val.contents_seq))
+            contents.map((val, idx) => {
+                query.push(this.ContentsAdminQuery.imgFile(val.contents_seq));
             });
 
             imgFile = await this.mysql.get(query);
-        }else{
+        } else {
             imgFile = [];
         }
 
@@ -60,54 +59,34 @@ export default class ContentsAdminService {
         //     skip: (page - 1) * 10,
         //     take: 10,
         // });
-        return {contents, imgFile}
-        }catch(e){
-            console.log(e.stack())
-        }
+        return {contents, imgFile};
 
-    }
+    };
 
     public createNoticeService = async (serialNumber: string, contents: string) => {
 
         let recordSet;
         let updateResult;
 
-        try{
         recordSet = await this.mysql.exec(this.ContentsAdminQuery.createNotice(), [serialNumber, contents]);
 
-        }catch (e){
-            console.log(e);
-            this.logger.error(e.message);
-            throw new Error(e)
-        }
-
-        return {recordSet}
-    }
+        return {recordSet};
+    };
 
     public delete = async (contentsSeqs: string, next: NextFunction) => {
         const seqArray = this.Utils.makeArray(contentsSeqs, ',');
         let recordSet;
         let updateResult;
 
-        try {
-            recordSet = await this.mysql.exec(this.ContentsAdminQuery.getBySeqs(), [seqArray]);
+        recordSet = await this.mysql.exec(this.ContentsAdminQuery.getBySeqs(), [seqArray]);
 
-            if (seqArray.length !== recordSet.length) {
-                throw new Error("already deleted");
-            }
-
-            updateResult = await this.mysql.exec(this.ContentsAdminQuery.delete(), [seqArray])
-
-            console.log(updateResult);
-
-        } catch (e) {
-            this.logger.error(e.message);
-            // next(new Error(e));
-            throw new Error(e);
-            return;
+        if (seqArray.length !== recordSet.length) {
+            throw new ErrorResponse(404, "already deleted", 1);
         }
 
-        return {recordSet, updateResult}
-    }
+        updateResult = await this.mysql.exec(this.ContentsAdminQuery.delete(), [seqArray]);
+
+        return {recordSet, updateResult};
+    };
 
 }

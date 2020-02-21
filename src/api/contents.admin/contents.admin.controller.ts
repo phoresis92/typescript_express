@@ -1,22 +1,24 @@
 import * as express from 'express';
-import HttpException from '../exceptions/HttpException';
+import ErrorResponse from '../../exceptions/ErrorResponse';
+import HttpException from '../../exceptions/HttpException';
 // import {getRepository, createConnection} from 'typeorm';
 // import Contents from '../entity/contents/contents.entity';
 // import PostNotFoundException from '../exceptions/PostNotFoundException';
-import Controller from '../interfaces/controller.interface';
+import Controller from '../../interfaces/controller.interface';
+import FailResponse from '../../utils/FailResponse';
 // import RequestWithUser from '../interfaces/requestWithUser.interface';
 // import authMiddleware from '../middleware/auth.middleware';
 // import validationMiddleware from '../middleware/validation.middleware';
 // import CreatePostDto from './post.dto';
 // import Post from './post.entity';
 
-import success from '../utils/SuccessResponse';
+import success from '../../utils/SuccessResponse';
 
 import {celebrate, Joi} from 'celebrate';
 
 import {Container, Inject} from 'typedi';
 import ContentsAdminService from './contents.admin.service';
-import SuccessResponse from "../utils/SuccessResponse";
+import SuccessResponse from "../../utils/SuccessResponse";
 import ContentsService from "../contents/contents.service";
 
 
@@ -66,11 +68,12 @@ class ContentsController implements Controller {
             const contentsService = Container.get(ContentsAdminService);
             const {recordSet} = await contentsService.createNoticeService(serialNumber, contents);
 
-            response.send(new success(request, request.params, next).make({}, 1));
+            response.send(new SuccessResponse(request, request.params, next).make({}, 1));
         } catch (e) {
-            console.log(e)
-            this.logger.error(e.message);
-            next(new HttpException(500, e.message, request.params));
+            if (e instanceof ErrorResponse) {
+                response.status(e.status).send(new FailResponse(request, request.params, next).make({}, e.errorCode, e.message));
+            }
+            next(new HttpException(e.status, e.message, request.params));
         }
 
     };
@@ -84,14 +87,11 @@ class ContentsController implements Controller {
             const {contents, imgFile} = await contentsService.getAll(page, keyword);
 
             response.send(new SuccessResponse(request, request.params, next).make({contents, imgFile}, 1));
-            if (!contents) {
-                // next(new PostNotFoundException(serialNumber));
-                return;
-            }
         } catch (e) {
-            console.log(e)
-            this.logger.error(e.stack());
-            next(new HttpException(500, e.message, request.params))
+            if (e instanceof ErrorResponse) {
+                response.status(e.status).send(new FailResponse(request, request.params, next).make({}, e.errorCode, e.message));
+            }
+            next(new HttpException(e.status, e.message, request.params));
         }
 
     };
@@ -104,12 +104,14 @@ class ContentsController implements Controller {
             const contentsService = Container.get(ContentsAdminService);
             const {recordSet, updateResult} = await contentsService.delete(contentsSeqs, next);
 
-            response.send(new success(request, request.params, next).make({recordSet, updateResult}, 1));
-        }catch(e){
-            console.log(e);
-            // this.logger.error(e.message);
-            next(new HttpException(500, e.message, request.params))
+            response.send(new SuccessResponse(request, request.params, next).make({}, 1));
+        } catch (e) {
+            if (e instanceof ErrorResponse) {
+                response.status(e.status).send(new FailResponse(request, request.params, next).make({}, e.errorCode, e.message));
+            }
+            next(new HttpException(e.status, e.message, request.params));
         }
+
     };
 }
 
