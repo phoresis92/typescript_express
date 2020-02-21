@@ -11,7 +11,7 @@ class SuccessResponse implements ResponseInterface{
     // public params;
     // public next;
     public resultData;
-    public sucCode;
+    public responseCode;
     private message;
 
     constructor(public request: Request, public params: object, public next: NextFunction){};
@@ -20,16 +20,16 @@ class SuccessResponse implements ResponseInterface{
         this.next(this);
     };
 
-    public make(resultData: any, sucCode: number, message?: string){
+    public make(resultData: any, responseCode: number, message?: string){
         this.resultData = resultData;
-        this.sucCode = sucCode;
+        this.responseCode = responseCode;
         this.message = message;
 
         this.callNext();
 
         return {
             result: true,
-            path: `${this.request.path}/${this.sucCode}`,
+            path: `${this.request.path}/${this.responseCode}`,
             resultData: this.resultData,
             message: (Config.nodeEnv == 'development' ? this.message : null)
         }

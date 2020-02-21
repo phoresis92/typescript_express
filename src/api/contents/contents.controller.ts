@@ -57,8 +57,9 @@ class ContentsController implements Controller {
         try {
             const contentsService = Container.get(ContentsService);
             const {recordSet, updateResult} = await contentsService.create(serialNumber, phoneNumber, fileSeqs, next);
+            let insertId = recordSet.insertId;
 
-            response.send(new SuccessResponse(request, request.params, next).make({}, 1));
+            response.send(new SuccessResponse(request, request.params, next).make({insertId}, 1));
         } catch (e) {
             if (e instanceof ErrorResponse) {
                 response.status(e.status).send(new FailResponse(request, request.params, next).make({}, e.errorCode, e.message));

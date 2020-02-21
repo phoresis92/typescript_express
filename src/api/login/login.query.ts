@@ -55,4 +55,19 @@ export default class contentsQuery{
         return query;
     }
 
+    public insertLogin = () => {
+        let query =
+            `INSERT INTO t_nf_user_login (
+            join_type, login_id, user_id, password)
+            VALUES (
+            'NORMAL', ?, ?, NULL)
+            ON DUPLICATE KEY UPDATE
+            join_type = VALUES(join_type),
+            login_id = VALUES(login_id),
+            user_id = VALUES(user_id),
+            password = VALUES(password) `;
+
+        return query;
+    }
+
 }

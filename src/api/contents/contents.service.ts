@@ -115,10 +115,6 @@ export default class ContentsService {
 
         recordSet = await this.mysql.exec(this.Query.create(), [serialNumber, phoneNumber]);
 
-        console.log(recordSet);
-        console.log(recordSet.affectedRows);
-        console.log(recordSet.insertId);
-
         let fileSeqArr = this.Utils.makeArray(fileSeqs, ',');
         console.log(fileSeqArr);
 

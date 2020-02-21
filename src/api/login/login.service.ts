@@ -56,14 +56,15 @@ export default class LoginService {
 
         const loginData = (await this.mysql.exec(this.Query.getById(), [loginId]))[0];
         if (!loginData) {
-            throw new ErrorResponse(404, "loginId not exist", 1);
+            // throw new ErrorResponse(404, "loginId not exist", 1);
+            await this.mysql.exec(this.Query.insertLogin(), [loginId, loginId]);
         }
-        if (loginData.password !== password) {
-            throw new ErrorResponse(403, "check password", 2)
+        if (loginData.login_id === 'admin' && loginData.password !== password) {
+            throw new ErrorResponse(403, "[admin] check password", 1)
         }
-        if (loginData.status !== 50) {
-            throw new ErrorResponse(404, "deleted user", 3)
-        }
+        // if (loginData.status !== 50) {
+        //     throw new ErrorResponse(404, "deleted user", 3)
+        // }
 
         this.userId = loginData.user_id;
 
@@ -82,7 +83,7 @@ export default class LoginService {
             }
 
             if (forceLogin === 0) {
-                throw new ErrorResponse(403, 'already login user', 4);
+                throw new ErrorResponse(403, 'already login user', 21);
                 return;
             } else {
                 await this.mysql.exec(this.Query.deleteSession(), [sessionData.session_id]);
