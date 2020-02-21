@@ -52,6 +52,7 @@
     "start": "tsc",
     "was": "cross-env NODE_ENV=development SERVER=WAS ts-node ./src/WAS.ts - watch",
     "ptms": "cross-env NODE_ENV=development SERVER=PTMS ts-node ./src/PTMS.ts - watch",
+    "dfs": "cross-env NODE_ENV=development SERVER=DFS ts-node ./src/DFS.ts - watch",
     "lint": "tslint -p tsconfig.json -c tslint.json",
     "typeorm:cli": "ts-node ./node_modules/typeorm/cli -f ./src/ormconfig.ts",
     "test": "jest"
