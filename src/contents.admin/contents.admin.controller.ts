@@ -21,7 +21,7 @@ import ContentsService from "../contents/contents.service";
 
 
 class ContentsController implements Controller {
-    public path = '/contents';
+    public path = '/admin/contents';
     public router = express.Router();
 
     @Inject('logger')
