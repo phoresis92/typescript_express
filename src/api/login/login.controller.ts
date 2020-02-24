@@ -53,6 +53,7 @@ class LoginController implements Controller {
 
             response.send(new SuccessResponse(request, request.params, next).make({}, 1));
         } catch (e) {
+            console.log(e);
             if (e instanceof ErrorResponse) {
                 response.status(e.status).send(new FailResponse(request, request.params, next).make({}, e.errorCode, e.message));
             }

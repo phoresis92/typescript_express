@@ -59,7 +59,7 @@ export default class LoginService {
             // throw new ErrorResponse(404, "loginId not exist", 1);
             await this.mysql.exec(this.Query.insertLogin(), [loginId, loginId]);
         }
-        if (loginData.login_id === 'admin' && loginData.password !== password) {
+        if (loginData && loginData.login_id === 'admin' && loginData.password !== password) {
             throw new ErrorResponse(403, "[admin] check password", 1)
         }
         // if (loginData.status !== 50) {
