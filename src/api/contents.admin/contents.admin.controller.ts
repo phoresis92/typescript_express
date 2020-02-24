@@ -68,13 +68,15 @@ class ContentsController implements Controller {
             const contentsService = Container.get(ContentsAdminService);
             const {recordSet} = await contentsService.createNoticeService(serialNumber, contents);
 
-            response.send(new SuccessResponse(request, request.params, next).make({}, 1));
+            let insertId = recordSet.insertId;
+
+            response.send(new SuccessResponse(request, request.params, next).make({insertId}, 1));
 
             new PushSender()
                 .setPosition('NOTICE')
                 .setSender(serialNumber)
                 .setTargetType('NOTICE')
-                .setTargetKey(recordSet.insertId)
+                .setTargetKey(insertId)
                 .pushAllUser();
 
         } catch (e) {
