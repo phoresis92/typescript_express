@@ -66,7 +66,7 @@ export default class LoginService {
         //     throw new ErrorResponse(404, "deleted user", 3)
         // }
 
-        this.userId = loginData.user_id;
+        this.userId = (loginData ? loginData.user_id : this.loginId);
 
 
         const sessionData = (await this.mysql.exec(this.Query.getSession('session_id'), [sessionId]))[0];
