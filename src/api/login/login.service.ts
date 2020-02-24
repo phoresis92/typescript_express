@@ -1,7 +1,7 @@
-import {getRepository} from 'typeorm';
-import Contents from '../../entity/contents/contents.entity';
-import Utils from '../../utils/utils';
-import {NextFunction} from "express";
+// import {getRepository} from 'typeorm';
+// import Contents from '../../entity/contents/contents.entity';
+// import Utils from '../../utils/utils';
+// import {NextFunction} from "express";
 // import * as express from "./post.controller";
 // import CreatePostDto from "./post.dto";
 // import PostNotFoundException from "../exceptions/PostNotFoundException";
@@ -75,7 +75,7 @@ export default class LoginService {
             this.loginProgress();
             return;
         } else {
-            const sessionData = (await this.mysql.exec(this.Query.getSession('user_id'), [loginData.user_id]))[0];
+            const sessionData = (await this.mysql.exec(this.Query.getSession('user_id'), [this.userId]))[0];
 
             if (!sessionData) {
                 this.loginProgress();

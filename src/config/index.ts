@@ -62,6 +62,19 @@ export default {
   },
 
   /**
+   * Push set
+   */
+  push: {
+    fcmKey: process.env.PUSH_FCM,
+    apnsRelease: process.env.PUSH_APNS_RELEASE,
+    apnsCert: process.env.PUSH_APNS_CERT,
+    apnsCertDev: process.env.PUSH_APNS_CERT_DEV,
+    apnsKey: process.env.PUSH_APNS_KEY,
+    apnsKeyDev: process.env.PUSH_APNS_KEY_DEV,
+    apnsPassphrase: process.env.PUSH_APNS_PASSPHRASE,
+  },
+
+  /**
    * Agenda.js stuff
    */
   agenda: {

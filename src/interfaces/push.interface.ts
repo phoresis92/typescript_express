@@ -8,7 +8,7 @@ interface PushInterface {
     opt4: string;
     opt5: string;
 
-    sendAlarm (): number;
+    sendAlarm (sendList: any[]): void;
 
 }
 

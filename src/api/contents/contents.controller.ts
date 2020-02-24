@@ -12,6 +12,8 @@ import {Container, Inject} from 'typedi';
 import ContentsService from './contents.service';
 import {Logger} from "winston";
 
+// import PushSender from '../../utils/PushSender';
+
 
 class ContentsController implements Controller {
     public path = '/contents';
@@ -60,6 +62,19 @@ class ContentsController implements Controller {
             let insertId = recordSet.insertId;
 
             response.send(new SuccessResponse(request, request.params, next).make({insertId}, 1));
+
+            // new PushSender()
+            //     .setPosition('CONTENTS')
+            //     .setSender()
+            //     .setTargetKey()
+            //     .setTargetType()
+            //     .setOpt1()
+            //     .setOpt2()
+            //     .setOpt3()
+            //     .setOpt4()
+            //     .setOpt5()
+
+
         } catch (e) {
             if (e instanceof ErrorResponse) {
                 response.status(e.status).send(new FailResponse(request, request.params, next).make({}, e.errorCode, e.message));
