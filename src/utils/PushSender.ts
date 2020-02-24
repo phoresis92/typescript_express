@@ -4,7 +4,7 @@ import SendPush from './SendPush';
 
 import PushService from './service/push.service';
 
-class PushSender implements pushInterface {
+export default class PushSender implements pushInterface {
     opt1: string;
     opt2: string;
     opt3: string;
@@ -66,7 +66,16 @@ class PushSender implements pushInterface {
 
     public async pushAllUser(){
         const pushService = Container.get(PushService);
-        const sendList = await pushService.insertAlarm(this);
+        const sendList = await pushService.insertAllUserAlarm(this);
+        // const sendList = await pushService.insertAdminAlarm(this);
+
+        this.sendAlarm(sendList);
+
+    }
+
+    public async pushAdmin(){
+        const pushService = Container.get(PushService);
+        const sendList = await pushService.insertAdminAlarm(this);
 
         this.sendAlarm(sendList);
 

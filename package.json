@@ -24,6 +24,7 @@
     "moment": "^2.24.0",
     "multer": "^1.4.2",
     "mysql": "^2.18.1",
+    "nodejs-apns-secure": "^1.0.4",
     "pg": "^7.8.0",
     "reflect-metadata": "^0.1.12",
     "supertest": "^3.4.2",

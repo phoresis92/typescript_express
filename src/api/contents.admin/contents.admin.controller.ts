@@ -20,6 +20,7 @@ import {Container, Inject} from 'typedi';
 import ContentsAdminService from './contents.admin.service';
 import SuccessResponse from "../../utils/SuccessResponse";
 import ContentsService from "../contents/contents.service";
+import PushSender from "../../utils/PushSender";
 
 
 class ContentsController implements Controller {
@@ -62,13 +63,20 @@ class ContentsController implements Controller {
     private createNotice = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
         const serialNumber = request.body.serialNumber;
         const contents = request.body.contents;
-        console.log(serialNumber)
-        console.log(contents)
+
         try {
             const contentsService = Container.get(ContentsAdminService);
             const {recordSet} = await contentsService.createNoticeService(serialNumber, contents);
 
             response.send(new SuccessResponse(request, request.params, next).make({}, 1));
+
+            new PushSender()
+                .setPosition('NOTICE')
+                .setSender(serialNumber)
+                .setTargetType('NOTICE')
+                .setTargetKey(recordSet.insertId)
+                .pushAllUser();
+
         } catch (e) {
             if (e instanceof ErrorResponse) {
                 response.status(e.status).send(new FailResponse(request, request.params, next).make({}, e.errorCode, e.message));

@@ -1,21 +1,22 @@
-import {Inject} from "typedi";
-import Mysql from "mysql";
+import {Inject, Service} from "typedi";
+import Mysql from "../loaders/MysqlTemplate";
 import PushQuery from "./service/push.query";
 import config from "../config";
 import FCM from 'fcm-node';
 
 
 export default class SendPush {
-    @Inject('mysql')
-    private mysql: Mysql;
+    // @Inject('mysql')
+    // private mysql;
 
     private pushQuery = new PushQuery();
 
     constructor(private PushObj, private position: string, private targetKey: string, private targetType: string){}
 
     public async send(){
-        const sessionList = await this.mysql.exec(this.pushQuery.checkPushSet(), [this.PushObj.user_id]);
-        const countBadge = await this.mysql.exec(this.pushQuery.getCountBadge(), [this.PushObj.user_id]);
+
+        const sessionList = await Mysql.exec(this.pushQuery.checkPushSet(), [this.PushObj.user_id]);
+        const countBadge = (await Mysql.exec(this.pushQuery.getCountBadge(), [this.PushObj.user_id]))[0];
 
         let pushCnt = sessionList.length;
         let andCnt = 0;
@@ -30,7 +31,7 @@ export default class SendPush {
                 position: this.position,
                 type: this.targetType,
                 key: this.targetKey,
-                badge: countBadge,
+                badge: countBadge.badge,
 
                 message: '',
                 sessionId: '',
@@ -67,8 +68,10 @@ export default class SendPush {
             }
 
             if (andCnt + iosList.length + etcCnt >= pushCnt) {
-                if (iosList.length > 0)
+                if (iosList.length > 0){
                     new ApnsSender().sendBulk(iosList, iosTargetList, this.targetType, this.position);
+
+                }
             }
 
 
@@ -133,19 +136,20 @@ class PushMessage {
                 break;
 
             case 'CONTENTS':
-                message = `새로운 게시물이 등록되었습니다.`;
+                message = `[${this.opt1}] ${this.opt2}개의 사진이 등록되었습니다.`;
                 break;
 
         }
 
-        return message;
+        return message.slice(0, 80);
     }
 }
 
 class FcmSender {
-    private fcm = new FCM(config.push);
+    private fcm = new FCM(config.push.fcmKey);
 
     public sendOnce (obj, sessionData) {
+
         var message = {
             to: sessionData.push_key,
             priority: "high",
@@ -309,19 +313,20 @@ class ApnsSender {
 
             this.apnsSender.sendThroughApns(apnsMessage, tokens,
                 function Success(resultStatusArray) {
-                    this.apnsSender.resultArray = [];
+                    // this.apnsSender.resultArray = [];
 
                     for (let i = 0; i < resultStatusArray.length; i++) {
                         if (resultStatusArray[i].status > 0){
-
+                            console.log(resultStatusArray[i].status)
                         }
                             // CommonDao.sendOnly(UserSessionDao.deleteByPushKey(resultStatusArray[i].token));
 
                     }
                 },
                 function Failed(error) {
+                console.log(error)
                     // LogErrorDao.error('PUSH_APNS', error);
-                    this.apnsSender.resultArray = [];
+                    // this.apnsSender.resultArray = [];
                 }
             );
 

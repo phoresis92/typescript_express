@@ -12,7 +12,7 @@ import {Container, Inject} from 'typedi';
 import ContentsService from './contents.service';
 import {Logger} from "winston";
 
-// import PushSender from '../../utils/PushSender';
+import PushSender from '../../utils/PushSender';
 
 
 class ContentsController implements Controller {
@@ -21,6 +21,8 @@ class ContentsController implements Controller {
 
     @Inject('logger')
     private logger: Logger;
+    @Inject('utils')
+    private Utils;
 
     constructor() {
         this.initializeRoutes();
@@ -63,16 +65,17 @@ class ContentsController implements Controller {
 
             response.send(new SuccessResponse(request, request.params, next).make({insertId}, 1));
 
-            // new PushSender()
-            //     .setPosition('CONTENTS')
-            //     .setSender()
-            //     .setTargetKey()
-            //     .setTargetType()
-            //     .setOpt1()
-            //     .setOpt2()
-            //     .setOpt3()
-            //     .setOpt4()
-            //     .setOpt5()
+            new PushSender()
+                .setPosition('CONTENTS')
+                .setSender(serialNumber)
+                .setTargetType('CONTENTS')
+                .setTargetKey(insertId)
+                .setOpt1(phoneNumber)
+                .setOpt2(fileSeqs.split(',').length)
+                .pushAdmin();
+                // .setOpt3()
+                // .setOpt4()
+                // .setOpt5()
 
 
         } catch (e) {

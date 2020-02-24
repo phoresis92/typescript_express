@@ -38,9 +38,17 @@ export default class PushService {
     };
 
 
-    public insertAlarm = async (Push: PushInterface) => {
+    public insertAllUserAlarm = async (Push: PushInterface) => {
         const recordSet = await this.mysql.commit(this.Query.pushAllUser(Push));
-        console.log(recordSet);
+
+        let sendList = recordSet[1];
+
+        return sendList;
+
+    }
+
+    public insertAdminAlarm = async (Push: PushInterface) => {
+        const recordSet = await this.mysql.commit(this.Query.pushAdmin(Push));
 
         let sendList = recordSet[1];
 
