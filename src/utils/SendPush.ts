@@ -4,6 +4,8 @@ import PushQuery from "./service/push.query";
 import config from "../config";
 import FCM from 'fcm-node';
 
+const fcm = new FCM(config.push.fcmKey);
+
 
 export default class SendPush {
     // @Inject('mysql')
@@ -146,7 +148,7 @@ class PushMessage {
 }
 
 class FcmSender {
-    private fcm = new FCM(config.push.fcmKey);
+    // private fcm = new FCM(config.push.fcmKey);
 
     public sendOnce (obj, sessionData) {
 
@@ -157,13 +159,13 @@ class FcmSender {
             data: obj
         };
 
-        this.fcm.send(message, function (err, response) {
+        fcm.send(message, function (err, response) {
             if (err) {
                 console.log('ERR', err);
                 // CommonDao.sendOnly(UserSessionDao.delete(sessionData.session_id));
 
             } else {
-                // console.log('response', response);
+                console.log('response', response);
 
             }
         });
