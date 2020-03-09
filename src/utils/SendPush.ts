@@ -141,6 +141,10 @@ class PushMessage {
                 message = `[${this.opt1}] ${this.opt2}개의 사진이 등록되었습니다.`;
                 break;
 
+            case 'DELETE':
+                message = `${this.opt1}`;
+                break;
+
         }
 
         return message.slice(0, 80);

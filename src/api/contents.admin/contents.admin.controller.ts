@@ -106,7 +106,6 @@ class ContentsController implements Controller {
 
     };
 
-
     private deleteContents = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
         const contentsSeqs = request.body.contentsSeqs;
 
@@ -115,6 +114,16 @@ class ContentsController implements Controller {
             const {recordSet, updateResult} = await contentsService.delete(contentsSeqs, next);
 
             response.send(new SuccessResponse(request, request.params, next).make({}, 1));
+
+
+            new PushSender()
+                .setPosition('DELETE')
+                .setSender('ADMIN')
+                .setTargetType('NOTICE')
+                .setTargetKey(contentsSeqs)
+                .setOpt1(contentsSeqs)
+                .pushAllUser();
+
         } catch (e) {
             if (e instanceof ErrorResponse) {
                 response.status(e.status).send(new FailResponse(request, request.params, next).make({}, e.errorCode, e.message));
