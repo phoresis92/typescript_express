@@ -1,36 +1,64 @@
-import { plainToClass } from 'class-transformer';
-import { validate, ValidationError } from 'class-validator';
+import {plainToClass} from 'class-transformer';
+import {validate, ValidationError} from 'class-validator';
 import * as express from 'express';
+import {Container} from 'typedi';
 import HttpException from '../exceptions/HttpException';
-import {Multer} from 'multer';
+import FileDto, {fileParam, fileParamType} from '../api/file/file.dto';
 
-function validationMiddleware<T>(type: any, skipMissingProperties = false, fileParams: Array<{name:string, maxcount:number}>): express.RequestHandler {
-  return (req, res, next) => {
-      req.body.dtoClass = plainToClass(type, req.body);
-    validate(req.body.dtoClass, { skipMissingProperties })
-      .then((errors: ValidationError[]) => {
-        if (errors.length > 0) {
-            // @ts-ignore
-            const message = errors.map((error: ValidationError) => Object.values(error.constraints)).join(', ');
-          next(new HttpException(400, message));
-        } else {
-            if(req.file){
 
-            }else if(req.files){
-                    let fileObjectType: {[key:string]: Multer.File[]} = {};
-                for(let fileParam of fileParams){
-                    // @ts-ignore
-                    fileObjectType[fileParam.name] = Multer.File[];
-                }
-                fileParams
-                // @ts-ignore
-                let fileObject: fileObjectType/*{fileData: Multer.File[], thumbData: Multer.File[]}*/ = req.files;
+function validationMiddleware<T>(type: any, skipMissingProperties = false): express.RequestHandler {
+    return (req, res, next) => {
+
+        if (req.file) {
+            req.body[req.file.fieldname] = 'Essential';
+
+        } else if (req.files) {
+            let keys = Object.keys(req.files);
+
+            for (let key of keys) {
+                req.body[key] = 'Essential';
 
             }
-          next();
+
         }
-      });
-  };
+
+        req.body.dtoClass = plainToClass(type, req.body);
+
+        validate(req.body.dtoClass, {skipMissingProperties})
+            .then((errors: ValidationError[]) => {
+                if (errors.length > 0) {
+                    // @ts-ignore
+                    const message = errors.map((error: ValidationError) => Object.values(error.constraints)).join(', ');
+                    next(new HttpException(400, message));
+                } else {
+
+                    if (req.file) {
+
+                        req.body.dtoClass[req.file.fieldname] = req.file;
+
+                    } else if (req.files) {
+
+                        // @ts-ignore
+                        let fileObject: fileParamType = req.files;
+
+                        let keys = Object.keys(req.files);
+                        for (let param of fileParam) {
+
+                            // @ts-ignore
+                            if (fileObject[param.name] && fileObject[param.name][0]) {
+                                // @ts-ignore
+                                req.body.dtoClass[param.name] = fileObject[param.name][0];
+                            }
+
+                        }
+
+                    }
+
+                    next();
+
+                }
+            });
+    };
 }
 
 export default validationMiddleware;
