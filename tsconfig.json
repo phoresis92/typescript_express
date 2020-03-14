@@ -9,7 +9,6 @@
 //    "target": "es2017",
 //    "outDir": "./dist",
 //    "baseUrl": "./src",
-//    "alwaysStrict": true,
 //    "noImplicitAny": true,
 //    "experimentalDecorators": true,
 //    "emitDecoratorMetadata": true
@@ -24,28 +23,42 @@
 
 {
   "compilerOptions": {
-    "target": "es2017",
+//    "paths": {
+//      "*": [
+//        "types/*"
+//      ]
+//    },
+    "target": "es5",
     "lib": [
-      "es2017",
+      "es2016",
       "esnext.asynciterable"
     ],
     "typeRoots": [
       "./node_modules/@types",
-      "./src/types"
+      "./types"
     ],
+    "declaration": true, // lib 만들 때 .d.ts 파일을 자동으로
+    "declarationDir": "./types", // 이 폴더에 만들어주는 옵션
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
-    "noImplicitAny": false,
+    "strict": true,
+    "strictPropertyInitialization": false, // 변수는 생성자에서 초기화 되어야 한다
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "strictNullChecks": true,
     "module": "commonjs",
     "pretty": true,
-    "sourceMap": true,
+    // "sourceMap": true,
     "outDir": "./build",
     "allowJs": true,
     "noEmit": false,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "removeComments": true,
+//    "alwaysStrict": true
   },
   "include": [
     "./src/**/*"

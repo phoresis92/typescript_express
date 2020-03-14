@@ -1,18 +1,19 @@
 import {NextFunction, Request, Response} from 'express';
-import {Container} from 'typedi';
+import {Container, Service} from 'typedi';
 // import LogErr from '../entity/log/log_error.entity';
 import HttpException from '../exceptions/HttpException';
 import {LogErrQuery} from '../query';
-import Mysql from 'mysql';
-import Config from '../config';
+import * as Mysql from '../loaders/MysqlTemplate';
+import Config from '../config/config.dto';
 import {Logger} from "winston";
 
 // import {getRepository} from 'typeorm';
 
+// @Service()
 const errorMiddleware = async (error: HttpException, request: Request, response: Response, next: NextFunction) => {
     // const logErrRepository = getRepository(LogErr);
     const logger: Logger = Container.get('logger');
-    const mysql: Mysql = Container.get('mysql');
+    const Config: Config = Container.get('Config');
     const logErrQuery = new LogErrQuery();
 
     const status = error.status || 500;
@@ -20,7 +21,7 @@ const errorMiddleware = async (error: HttpException, request: Request, response:
     const params = error.params || {};
 
     try {
-        const recordSet = await mysql.exec(logErrQuery.create(),
+        const recordSet = await Mysql.exec(logErrQuery.create(),
                                            [
                                                status,
                                                Config.server,
@@ -52,6 +53,7 @@ const errorMiddleware = async (error: HttpException, request: Request, response:
 
     }
 
+    console.log(error)
     logger.error(`[${error.status}|${request.method}|${request.path}]${JSON.stringify(error.stack)}`);
 
     if (!response.finished) {

@@ -22,25 +22,25 @@ enum contentsType {
 @Service()
 export default class ContentsService {
     @Inject('utils')
-    private Utils;
+    private Utils: any;
     @Inject('mysql')
-    private mysql;
+    private mysql: any;
     @Inject('logger')
     private logger: Logger;
 
-    private Query;
+    private Query: contentsQuery;
 
     constructor() {
         this.Query = new contentsQuery();
     };
 
-    public getBySerial = async (serialNumber: string, keyword, page: number) => {
+    public getBySerial = async (serialNumber: string, keyword: string, page: number) => {
         const contents = await this.mysql.exec(this.Query.bySerial(page, keyword), [serialNumber]);
 
         let imgFile;
         if (contents.length !== 0) {
-            let query = [];
-            contents.map((val, idx) => {
+            let query: Array<string> = [];
+            contents.map((val: any, idx: number) => {
                 query.push(this.Query.imgFile(val.contents_seq));
             });
 

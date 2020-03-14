@@ -4,12 +4,14 @@ import LogErr from '../entity/log/log_error.entity';
 // import LogErr from '../entity/log/log_error.entity';
 // import HttpException from '../exceptions/HttpException';
 import {SuccessResponse} from '../utils';
-import Config from '../config';
+import ConfigClass from '../config/config.dto';
 import {LogErrQuery} from '../query';
 
 import {getRepository} from 'typeorm';
 import {Logger} from "winston";
-import Mysql from 'mysql';
+// import Mysql from 'mysql';
+import Mysql from '../loaders/MysqlTemplate';
+
 
 const dbLogMiddleware = async (nextData: SuccessResponse | Error, request: Request, response: Response, next: NextFunction) => {
     if (nextData instanceof Error) {
@@ -19,11 +21,13 @@ const dbLogMiddleware = async (nextData: SuccessResponse | Error, request: Reque
 
 
     const logger: Logger = Container.get('logger');
-    const mysql: Mysql = Container.get('mysql');
+    const Config: ConfigClass = Container.get('Config');
+
+    // const mysql: Mysql = Container.get('mysql');
     const logErrQuery = new LogErrQuery();
 
     try {
-        const recordSet = await mysql.exec(logErrQuery.create(),
+        const recordSet = await Mysql.exec(logErrQuery.create(),
                    [
                        response.statusCode,
                        Config.server,

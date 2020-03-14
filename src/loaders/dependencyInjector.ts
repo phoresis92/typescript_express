@@ -2,6 +2,7 @@ import { Container } from 'typedi';
 import LoggerInstance from './logger';
 import { SuccessResponse, Utils } from '../utils';
 import mysql from './MysqlTemplate';
+// import config from '../config/index.ts';
 
 export default ({ /*mongoConnection*/ models }: { /*mongoConnection;*/ models: { name: string; model: any }[] }) => {
   try {
@@ -13,6 +14,8 @@ export default ({ /*mongoConnection*/ models }: { /*mongoConnection;*/ models: {
     Container.set('utils', new Utils());
     Container.set('success', SuccessResponse);
     Container.set('mysql', mysql);
+
+    return LoggerInstance
 
   } catch (e) {
     LoggerInstance.error('🔥 Error on dependency injector loader: %o', e);

@@ -1,19 +1,21 @@
 import {Inject, Service} from "typedi";
 import Mysql from "../loaders/MysqlTemplate";
 import PushQuery from "./service/push.query";
-import config from "../config";
+import Config from "../config/config.dto";
 import FCM from 'fcm-node';
 
-const fcm = new FCM(config.push.fcmKey);
+// const fcm = new FCM(config.push.fcmKey);
 
 
 export default class SendPush {
     // @Inject('mysql')
     // private mysql;
+    @Inject('Config')
+    private Config: Config;
 
     private pushQuery = new PushQuery();
 
-    constructor(private PushObj, private position: string, private targetKey: string, private targetType: string){}
+    constructor(private PushObj:any, private position: string, private targetKey: string, private targetType: string){}
 
     public async send(){
 

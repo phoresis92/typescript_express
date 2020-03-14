@@ -1,8 +1,9 @@
 import {Inject} from 'typedi';
+import Mysql from '../loaders/MysqlTemplate';
 
 export default class contentsQuery{
-    @Inject('mysql')
-    private mysql
+    // @Inject('mysql')
+    // private mysql: mysql;
 
     constructor(){}
 

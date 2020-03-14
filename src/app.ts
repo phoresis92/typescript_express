@@ -1,7 +1,7 @@
 import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
-import multer from 'multer';
-import express, {NextFunction, Request, Response} from 'express';
+// import * as multer from 'multer';
+import express from 'express';
 import {Container} from 'typedi';
 // import HttpException from './exceptions/HttpException';
 import Status404Exception from './exceptions/Status404Exception';
@@ -9,12 +9,17 @@ import Controller from './interfaces/controller.interface';
 import errorMiddleware from './middleware/error.middleware';
 import logErrMiddleware from './middleware/dblog.middleware';
 import {Logger} from "winston";
-import Config from "./config/index";
+import Config from "./config/config.dto";
+
+const multer = require('multer');
+// const uploads = multer({dest: '/home/young/workspace/typescript_express/uploads'})
 
 class App {
   private logger: Logger = Container.get('logger');
   private app: express.Application;
-  private port: number
+  private port: number;
+
+  private Config: Config = Container.get('Config');
 
   constructor(controllers: Controller[]) {
     this.app = express();
@@ -41,23 +46,25 @@ class App {
   }
 
   private getPort(){
-    switch (Config.server) {
-      case Config.serverType.WAS:
-        this.port = Config.wasPort;
+    switch (this.Config.server) {
+      case this.Config.serverType.WAS:
+        this.port = this.Config.wasPort;
         break;
-      case Config.serverType.PTMS:
-        this.port = Config.ptmsPort;
+      case this.Config.serverType.PTMS:
+        this.port = this.Config.ptmsPort;
         break;
-      case Config.serverType.DFS:
-        this.port = Config.dfsPort;
+      case this.Config.serverType.DFS:
+        this.port = this.Config.dfsPort;
         break;
     }
   }
 
   private initializeMiddlewares() {
+      console.log(this.Config.server !== 'DFS')
+      console.log(this.Config.server)
     this.app.use(bodyParser.json()); // for parsing application/json
     this.app.use(bodyParser.urlencoded({extended:true})); // for parsing application/x-www-form-urlencoded
-    this.app.use(multer().array()); // for parsing multipart/form-data
+    (this.Config.server !== 'DFS' ? this.app.use(multer().none()) : null); // for parsing multipart/form-data
     this.app.use(cookieParser());
   }
 
@@ -68,32 +75,32 @@ class App {
 
   private initializeControllers(controllers: Controller[]) {
     controllers.forEach((controller) => {
-      this.app.use(Config.api.prefix, controller.router);
+      this.app.use(this.Config.api.prefix, controller.router);
     });
   }
 
   private InvalidAddress404 (){
-    this.app.get('*', async (request: Request, response: Response, next: NextFunction)=>{
+    this.app.get('*', async (request: express.Request, response: express.Response, next: express.NextFunction)=>{
       next(new Status404Exception(request.params));
     })
-        .post('*', async (request: Request, response: Response, next: NextFunction)=>{
+        .post('*', async (request: express.Request, response: express.Response, next: express.NextFunction)=>{
           next(new Status404Exception(request.params));
         })
-        .delete('*', async (request: Request, response: Response, next: NextFunction)=>{
+        .delete('*', async (request: express.Request, response: express.Response, next: express.NextFunction)=>{
           next(new Status404Exception(request.params));
         })
-        .put('*', async (request: Request, response: Response, next: NextFunction)=>{
+        .put('*', async (request: express.Request, response: express.Response, next: express.NextFunction)=>{
           next(new Status404Exception(request.params));
         })
-        .patch('*', async (request: Request, response: Response, next: NextFunction)=>{
+        .patch('*', async (request: express.Request, response: express.Response, next: express.NextFunction)=>{
           next(new Status404Exception(request.params));
         })
-        .head('*', async (request: Request, response: Response, next: NextFunction)=>{
+        .head('*', async (request: express.Request, response: express.Response, next: express.NextFunction)=>{
           next(new Status404Exception(request.params));
         })
-        .options('*', async (request: Request, response: Response, next: NextFunction)=>{
+        .options('*', async (request: express.Request, response: express.Response, next: express.NextFunction)=>{
           next(new Status404Exception(request.params));
-        })
+        });
   }
 }
 

@@ -1,18 +1,19 @@
 import {NextFunction, Request} from 'express';
 import { Container } from 'typedi';
 import ResponseInterface from '../interfaces/response.interface';
-import Config from '../config'
+import Config from '../config/config.dto'
 
 class FailResponse implements ResponseInterface{
     private logger = Container.get('logger');
+    private Config: Config = Container.get('Config');
     // private config: Config = Container.get('config');
 
     // public request;
     // public params;
     // public next;
-    public resultData;
-    public responseCode;
-    private message;
+    public resultData: any;
+    public responseCode: number;
+    private message: string;
 
     constructor(public request: Request, public params: object, public next: NextFunction){};
 
@@ -21,6 +22,9 @@ class FailResponse implements ResponseInterface{
     };
 
     public make(resultData: any, responseCode: number, message?: string){
+        if(message === undefined){
+            message = '';
+        }
         this.resultData = resultData;
         this.responseCode = responseCode;
         this.message = message;
@@ -31,7 +35,7 @@ class FailResponse implements ResponseInterface{
             result: false,
             path: `${this.request.path}/${this.responseCode}`,
             resultData: this.resultData,
-            message: (Config.nodeEnv == 'development' ? this.message : null)
+            message: (this.Config.nodeEnv == 'development' ? this.message : null)
         }
     }
 

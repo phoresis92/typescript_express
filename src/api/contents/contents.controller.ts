@@ -21,8 +21,6 @@ class ContentsController implements Controller {
 
     @Inject('logger')
     private logger: Logger;
-    @Inject('utils')
-    private Utils;
 
     constructor() {
         this.initializeRoutes();

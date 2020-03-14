@@ -13,6 +13,7 @@ function validateEnv() {
     WAS_PORT: port(),
     PTMS_PORT: port(),
     SERVER: str(),
+    SERVICE_NAME: str(),
   });
 }
 
