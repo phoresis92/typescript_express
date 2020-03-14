@@ -23,8 +23,8 @@ import FileDto, { fileParam, fileParamType } from './file.dto';
 import multer = require('multer');
 const storage = multer.memoryStorage();
 
+import FileHanderClass from '../../utils/fileHandler.class';
 
-import mkdirp from 'mkdirp';
 
 class FileController implements Controller {
     public path = '/file';
@@ -59,18 +59,13 @@ class FileController implements Controller {
             const dtoClass = request.body.dtoClass;
             console.log(dtoClass);
 
-            if(!fs.existsSync(`${this.Config.basePath}${this.Config.uploadPath}`)){
-                console.log('not exist', `${this.Config.basePath}${this.Config.uploadPath}`);
-                mkdirp.sync(`${this.Config.basePath}${this.Config.uploadPath}`);
-            }
+            await new FileHanderClass()
+                .uploadFileByBuffer(`${this.Config.basePath}${this.Config.uploadPath}`, `${dtoClass.fileData.originalname}`, dtoClass.fileData.buffer, 1);
 
-            const permission = 438;
-            let fileDescriptor = fs.openSync(`${this.Config.basePath}${this.Config.uploadPath}/${dtoClass.fileData.originalname}`, 'w', permission);
+            // await new FileHanderClass()
+            //     .deleteFile(`${this.Config.basePath}${this.Config.uploadPath}`, `${dtoClass.fileData.originalname}`);
 
-            if(fileDescriptor){
-                fs.writeSync(fileDescriptor, dtoClass.fileData.buffer, 0, dtoClass.fileData.buffer.length, 0);
-                fs.closeSync(fileDescriptor);
-            }
+            console.log(123);
 
             // const buff = new Buffer(dtoClass.fileData.buffer.length);
             // let char = '';
@@ -119,8 +114,8 @@ class FileController implements Controller {
                 });
             });*/
 
-            response.send(`${dtoClass.fullName}\n${dtoClass.email}\n${dtoClass.password}\n${dtoClass.fileData}`);
-
+            // response.send(`${dtoClass.fullName}\n${dtoClass.email}\n${dtoClass.password}\n${dtoClass.fileData}`);
+            response.sendFile()
         } catch (e) {
             if (e instanceof ErrorResponse) {
                 response.status(e.status).send(new FailResponse(request, request.params, next).make({}, e.errorCode, e.message));
