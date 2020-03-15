@@ -22,9 +22,9 @@ function validationMiddleware<T>(type: any, skipMissingProperties = false): expr
 
         }
 
-        req.body.dtoClass = plainToClass(type, req.body);
+        req.body.DtoClass = plainToClass(type, req.body);
 
-        validate(req.body.dtoClass, {skipMissingProperties})
+        validate(req.body.DtoClass, {skipMissingProperties})
             .then((errors: ValidationError[]) => {
                 if (errors.length > 0) {
                     // @ts-ignore
@@ -34,7 +34,7 @@ function validationMiddleware<T>(type: any, skipMissingProperties = false): expr
 
                     if (req.file) {
 
-                        req.body.dtoClass[req.file.fieldname] = req.file;
+                        req.body.DtoClass[req.file.fieldname] = req.file;
 
                     } else if (req.files) {
 
@@ -47,7 +47,7 @@ function validationMiddleware<T>(type: any, skipMissingProperties = false): expr
                             // @ts-ignore
                             if (fileObject[param.name] && fileObject[param.name][0]) {
                                 // @ts-ignore
-                                req.body.dtoClass[param.name] = fileObject[param.name][0];
+                                req.body.DtoClass[param.name] = fileObject[param.name][0];
                             }
 
                         }

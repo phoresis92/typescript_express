@@ -2,7 +2,7 @@ import {Equals, Allow, IsNotEmpty, IsDefined, validate, validateOrReject, Contai
 
 class FileDto {
     @IsNotEmpty()
-    public fileData: string;
+    public fileData: Express.Multer.File;
 
     @IsNotEmpty()
     public filePath: string;
