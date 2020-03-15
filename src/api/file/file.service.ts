@@ -36,7 +36,7 @@ export default class FileService {
         return new Promise(async (resolve, reject) => {
 
             let baseRoot: string = `${this.Config.basePath}${this.Config.uploadPath}`;
-            let path: string = FileDto.filePath;
+            let path: string = `/${FileDto.filePath}`;
             let fileName: string = '';
             const originName: string = FileDto.fileData.originalname;
             const ext: string = extname(originName);
@@ -66,13 +66,12 @@ export default class FileService {
             // @ts-ignore
             const originSize: {width: number, height: number} = await this.FileHandler.getDimension(FileDto.fileData.buffer);
 
-            returnObj.result = true;
             returnObj.userId = FileDto.userId;
             returnObj.fileName = fileName;
             returnObj.fileExtenstion = ext;
             returnObj.filePath = `${path}`;
             returnObj.fileWidth = originSize.height;
-            returnObj.fileHeigth = originSize.width;
+            returnObj.fileHeight = originSize.width;
             returnObj.fileSize = FileDto.fileData.size;
             returnObj.fileType = 'img';
             returnObj.option1 = FileDto.option1;
@@ -102,7 +101,7 @@ export default class FileService {
 
                 returnObj.thumbName = thumbName;
                 returnObj.thumbWidth = thumbSize.width;
-                returnObj.thumbHeigth = thumbSize.height;
+                returnObj.thumbHeight = thumbSize.height;
                 returnObj.code = '02';
 
                 await this.FileDAO.insertFile(returnObj);
@@ -115,9 +114,12 @@ export default class FileService {
                 await this.FileHandler.getThumbnail(FileDto.fileData.buffer, resizeWidth, resizeHeight
                     , `${baseRoot}${path}/${thumbName}`, 100);
 
+                // @ts-ignore
+                const thumbSize: {width: number, height: number} = await this.FileHandler.getDimension(`${baseRoot}${path}/${thumbName}`);
+
                 returnObj.thumbName = thumbName;
-                returnObj.thumbWidth = resizeWidth;
-                returnObj.thumbHeigth = resizeHeight;
+                returnObj.thumbWidth = thumbSize.width;
+                returnObj.thumbHeight = thumbSize.height;
                 returnObj.code = '03';
 
                 await this.FileDAO.insertFile(returnObj);
@@ -143,12 +145,10 @@ export class FileResponseClass extends FileDtoClass{
     fileType: string;
     fileSize: number;
     fileWidth: number;
-    fileHeigth: number;
-    result: boolean;
-    tempKey: string;
+    fileHeight: number;
     thumbName: string;
-    thumbHeigth: number;
-
+    thumbWidth: number;
+    thumbHeight: number;
 
     public insertFile (){
         let query = `
@@ -164,17 +164,17 @@ export class FileResponseClass extends FileDtoClass{
                 , file_extension = ${sql.escape(this.fileExtenstion)}
                 , file_size = ${sql.escape(this.fileSize)}
                 , file_width = ${sql.escape(this.fileWidth)}
-                , file_height = ${sql.escape(this.fileHeigth)}
+                , file_height = ${sql.escape(this.fileHeight)}
                 , thumb_path = ${sql.escape(this.filePath)}
                 , thumb_name = ${sql.escape(this.thumbName)}
                 , thumb_extension = ${sql.escape(this.fileExtenstion)}
                 , thumb_width = ${sql.escape(this.thumbWidth)}
-                , thumb_height = ${sql.escape(this.thumbHeigth)}
+                , thumb_height = ${sql.escape(this.thumbHeight)}
                 , option1 = ${sql.escape(this.option1)}
                 , option2 = ${sql.escape(this.option2)}
                 , option3 = ${sql.escape(this.option3)}
         `;
-console.log(query)
+
         return query;
     }
 
