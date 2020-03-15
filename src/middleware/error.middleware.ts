@@ -4,7 +4,7 @@ import {Container, Service} from 'typedi';
 import HttpException from '../exceptions/HttpException';
 import {LogErrQuery} from '../query';
 import * as Mysql from '../loaders/MysqlTemplate';
-import Config from '../config/config.dto';
+import ConfigClass from '../config/config.dto';
 import {Logger} from "winston";
 
 // import {getRepository} from 'typeorm';
@@ -13,7 +13,7 @@ import {Logger} from "winston";
 const errorMiddleware = async (error: HttpException, request: Request, response: Response, next: NextFunction) => {
     // const logErrRepository = getRepository(LogErr);
     const logger: Logger = Container.get('logger');
-    const Config: Config = Container.get('Config');
+    const Config: ConfigClass = Container.get('Config');
     const logErrQuery = new LogErrQuery();
 
     const status = error.status || 500;
@@ -54,12 +54,13 @@ const errorMiddleware = async (error: HttpException, request: Request, response:
     }
 
     console.log(error)
-    logger.error(`[${error.status}|${request.method}|${request.path}]${JSON.stringify(error.stack)}`);
+    logger.error(`[${error.status}|${request.method}|${request.path}]${JSON.stringify(error.message)}`);
 
     if (!response.finished) {
         response
             .status(status)
             .send({
+                      result: false,
                       message,
                       status,
                   });

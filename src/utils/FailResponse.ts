@@ -12,7 +12,7 @@ class FailResponse implements ResponseInterface{
     // public params;
     // public next;
     public resultData: any;
-    public responseCode: number;
+    public responseCode: string;
     private message: string;
 
     constructor(public request: Request, public params: object, public next: NextFunction){};
@@ -21,7 +21,7 @@ class FailResponse implements ResponseInterface{
         this.next(this);
     };
 
-    public make(resultData: any, responseCode: number, message?: string){
+    public make(resultData: any, responseCode: string, message?: string){
         if(message === undefined){
             message = '';
         }

@@ -11,7 +11,6 @@ export default class FileDAO{
     public async insertFile (returnObj: FileResponseClass) {
         const recordSet = await Mysql.commit(returnObj.insertFile());
 
-        console.log(recordSet);
     }
 
 }

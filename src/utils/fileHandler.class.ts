@@ -1,13 +1,20 @@
-import {rejects} from 'assert';
 import * as fs from "fs";
 import gm from "gm";
 import mkdirp from 'mkdirp';
 import moment from 'moment';
 import path, {extname} from 'path';
+import {Inject} from 'typedi';
 import uuid, {v1, v3, v4, v5} from 'uuid';
+import ffmpeg from 'fluent-ffmpeg';
+import ConfigClass from '../config/config.dto';
+
+import ErrorResponse from '../exceptions/ErrorResponse';
 
 
 export default class FileHandlerClass{
+
+    @Inject()
+    private Config: ConfigClass;
 
     constructor(){
     }
@@ -55,6 +62,86 @@ export default class FileHandlerClass{
 
         })
 
+    }
+
+    public convertVideo (path: string, encodeSize: string = '50%', encodeFps: number = 24, fileName: string, convertName: string){
+
+        return new Promise((resolve, reject)=>{
+            // @ts-ignore
+            const command = new ffmpeg({source: `${this.Config.basePath}${this.Config.uploadPath}${path}/${fileName}`, nolog: true});
+
+            command
+                .setFfmpegPath(`${this.Config.basePath}/dfs_modules/ffmpeg_linux/bin/ffmpeg`)
+                //set the size
+                .withSize(encodeSize)
+                // set fps
+                .withFps(encodeFps)
+                // set output format to force
+                .toFormat('mp4')
+                // save to file <-- the new file I want -->
+                .saveToFile(`${this.Config.basePath}${this.Config.uploadPath}${path}/${convertName}`)
+                // setup event handlers
+                .on('end', function () {
+
+                    resolve(true);
+
+                })
+                .on('error', (err: Error) => {
+                    console.log('an error happened: ' + err.message);
+                    reject(err);
+                });
+
+        });
+    }
+
+    public getVideoMeta (path: string){
+        return new Promise((resolve, reject)=>{
+            ffmpeg(path)
+                .ffprobe((err, data)=>{
+                    if(err) throw err;
+
+                    let width: number = 0;
+                    let height: number = 0;
+                    for(let stream of data.streams){
+                        if(stream.width){
+                            width = stream.width;
+                        }
+                        if(stream.height){
+                            height = stream.height;
+                        }
+                    }
+
+                    let duration: number = 0;
+                    if(data.format.duration){
+                        duration = data.format.duration;
+                    }
+
+                    let size: number = 0;
+                    if(data.format.size){
+                        size = data.format.size;
+                    }
+
+                    let bitRate: number = 0;
+                    if(data.format.bit_rate){
+                        bitRate = data.format.bit_rate;
+                    }
+
+                    resolve({width, height, duration, size, bitRate});
+
+                })
+
+        });
+    }
+
+    public getStat (path: string){
+        return new Promise((resolve, reject)=>{
+            fs.stat(path, (err, stats)=>{
+                if(err) resolve(/*new ErrorResponse(404, 'Not Exist File', '01')*/)/*resolve('Not Exist File')*/;
+
+                resolve(stats)
+
+            })
+        });
     }
 
     public getDimension (file: any){
@@ -135,4 +222,5 @@ export default class FileHandlerClass{
     public getUniqueName(){
         return `${moment().format('YYYYMMDD_HHmmss')}_${v4().split('-')[0]}`;
     }
+
 }
