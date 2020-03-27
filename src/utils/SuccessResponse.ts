@@ -8,9 +8,9 @@ class SuccessResponse implements ResponseInterface{
     private Config: Config = Container.get('Config');
     // private config: Config = Container.get('config');
 
-    // public request;
-    // public params;
-    // public next;
+    // public request: Request;
+    // public params: object;
+    // public next: NextFunction;
     public resultData: any;
     public responseCode: string;
     private message: string;

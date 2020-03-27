@@ -1,4 +1,7 @@
 import * as express from 'express';
+import HttpException from '../exceptions/HttpException';
+import FailResponse from '../utils/FailResponse';
+import SuccessResponse from '../utils/SuccessResponse';
 
 class defaultValueMiddleware {
 
@@ -6,6 +9,8 @@ class defaultValueMiddleware {
     private oneArr: string[];
 
     constructor(){
+        this.zeroArr = [];
+        this.oneArr = [];
     }
 
     public setDefault0(zeroArr: string[]){
@@ -20,19 +25,57 @@ class defaultValueMiddleware {
 
     public handle (): express.RequestHandler{
         return (req, res, next) => {
-            for (let key of this.zeroArr) {
-                if (req.body[key] === '') {
-                    req.body[key] = 0;
-                }else{
-                    req.body[key] = parseInt(req.body[key])
+            let NaNArr: string[] = [];
+
+            if(req.method === 'GET'){
+                for (let key of this.zeroArr) {
+                    if (req.query[key] === '') {
+                        req.query[key] = 0;
+                    }else{
+                        req.query[key] = parseInt(req.query[key]);
+                        if(isNaN(req.query[key])){
+                            NaNArr.push(key);
+                        }
+                    }
                 }
+                for (let key of this.oneArr) {
+                    if (req.query[key] === '') {
+                        req.query[key] = 1;
+                    }else{
+                        req.query[key] = parseInt(req.query[key]);
+                        if(isNaN(req.query[key])){
+                            NaNArr.push(key);
+                        }
+                    }
+                }
+
+            }else {
+                for (let key of this.zeroArr) {
+                    if (req.body[key] === '' || req.body[key] === undefined) {
+                        req.body[key] = 0;
+                    }else{
+                        req.body[key] = parseInt(req.body[key]);
+                        if(isNaN(req.body[key])){
+                            NaNArr.push(key);
+                        }
+                    }
+                }
+                for (let key of this.oneArr) {
+                    if (req.body[key] === '' || req.body[key] === undefined) {
+                        req.body[key] = 1;
+                    }else{
+                        req.body[key] = parseInt(req.body[key]);
+                        if(isNaN(req.body[key])){
+                            NaNArr.push(key);
+                        }
+                    }
+                }
+
             }
-            for (let key of this.oneArr) {
-                if (req.body[key] === '') {
-                    req.body[key] = 1;
-                }else{
-                    req.body[key] = parseInt(req.body[key])
-                }
+
+            if(NaNArr.length !== 0){
+                throw new HttpException(400, `${NaNArr.join(',')} is NaN`);
+
             }
 
             next();
@@ -42,35 +85,3 @@ class defaultValueMiddleware {
 }
 
 export default defaultValueMiddleware;
-
-
- // function defaultValueDFSMiddleware<T>(...rest: any[]): express.RequestHandler {
- //    return (req, res, next) => {
- //        let defaultValueMap = new Map();
- //
- //
- //
- //        defaultValueMap.set('TEMP', ['targetType', 'targetKey']);
- //
- //        for(let [key, targetList] of defaultValueMap){
- //            for(let target of targetList) {
- //                if(req.body[target] === ''){
- //                    req.body[target] = key;
- //                }
- //
- //            }
- //        }
- //        const tempList = [];
- //
- //        for(let key of tempList){
- //            if(req.body[key] === ''){
- //                req.body[key] = 'TEMP';
- //            }
- //        }
- //
- //        const zeroList = ['thumbWidth', 'thumbHeight']
- //        const zeroList = ['useUniqueFileName', 'useDateFolder', 'makeThumb', 'thumbOption']
- //
- //    };
-// }
-

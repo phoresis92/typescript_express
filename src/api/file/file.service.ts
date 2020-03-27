@@ -30,7 +30,7 @@ export default class FileService {
     constructor() {
     };
 
-    public uploadImageService = async (FileDto: FileDtoClass) => {
+    public uploadImageService = async (FileDto: FileDtoClass): Promise<FileResponseClass> => {
         if (FileDto.makeThumb == 1 && (FileDto.thumbWidth == 0 || FileDto.thumbHeight == 0)) {
             throw new Error('@Thumbnail Scale Error');
         }
@@ -132,7 +132,7 @@ export default class FileService {
 
     };
 
-    public uploadVideoService = async (FileDto: FileDtoClass) => {
+    public uploadVideoService = async (FileDto: FileDtoClass): Promise<FileResponseClass> => {
         // if (FileDto.makeThumb == 1 && (FileDto.thumbWidth == 0 || FileDto.thumbHeight == 0)) {
         //     throw new Error('@Thumbnail Scale Error');
         // }
@@ -148,7 +148,8 @@ export default class FileService {
             let returnObj: FileResponseClass = new FileResponseClass();
 
             if (!this.allowVideoExt.includes(ext)) {
-                throw new Error('@Ext Not Allowed');
+                reject('@Ext Not Allowed');
+                // throw new Error('@Ext Not Allowed');
             }
 
             if (FileDto.useDateFolder === 1) {
@@ -244,8 +245,7 @@ export default class FileService {
 
         });
 
-    }
-    ;
+    };
 
 }
 
