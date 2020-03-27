@@ -77,7 +77,7 @@ class App {
 
   private initializeControllers(controllers: Controller[]) {
     controllers.forEach((controller) => {
-      this.app.use(this.Config.api.prefix, controller.router);
+      this.app.use((this.Config.server !== 'DFS' ? this.Config.api.prefix : ''), controller.router);
     });
   }
 
