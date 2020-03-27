@@ -50,6 +50,7 @@ export default {
    */
   basePath: process.env.BASE_PATH,
   uploadPath: process.env.UPLOAD_PATH,
+  ffmpegPath: process.env.FFMPEG_PATH,
 
   /**
    * That long string from mlab

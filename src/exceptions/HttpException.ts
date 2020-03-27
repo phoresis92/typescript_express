@@ -1,7 +1,7 @@
 class HttpException extends Error {
-  private status: number;
-  public message: string;
-  private params: object;
+    public status: number;
+    public message: string;
+    public params: object;
 
   constructor(status: number, message: string, params?: object) {
     super(message);

@@ -1,3 +1,4 @@
+import path from 'path';
 import validateEnv from '../loaders/validateEnv';
 
 /**
@@ -56,6 +57,7 @@ export default class Config {
      */
     public basePath: string = process.env.BASE_PATH!;
     public uploadPath: string = process.env.UPLOAD_PATH!;
+    public ffmpegPath: string = path.join(__dirname, '../..', process.env.FFMPEG_PATH!);
 
     /**
      * That long string from mlab

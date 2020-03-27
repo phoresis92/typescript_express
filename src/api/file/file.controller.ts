@@ -47,7 +47,7 @@ class FileController implements Controller {
 
     private initializeRoutes() {
         this.router
-            .get(`/download/:filePath/:fileDate/:fileName`
+            .get(`/:filePath/:fileDate/:fileName`
                 , this.downloadFile)
 
             .post(`/file/img`

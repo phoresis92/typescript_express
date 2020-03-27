@@ -1,5 +1,6 @@
 import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
+import path from 'path';
 // import * as multer from 'multer';
 import express from 'express';
 import {Container} from 'typedi';
@@ -13,6 +14,7 @@ import Config from "./config/config.dto";
 
 const multer = require('multer');
 // const uploads = multer({dest: '/home/young/workspace/typescript_express/uploads'})
+
 
 class App {
   private logger: Logger = Container.get('logger');

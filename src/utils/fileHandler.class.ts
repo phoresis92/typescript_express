@@ -10,6 +10,8 @@ import ConfigClass from '../config/config.dto';
 
 import ErrorResponse from '../exceptions/ErrorResponse';
 
+// @ts-ignore
+// const ffmpegPath: string = `${__basedir}${this.Config.ffmpegPath}`;
 
 export default class FileHandlerClass{
 
@@ -71,7 +73,7 @@ export default class FileHandlerClass{
             const command = new ffmpeg({source: `${this.Config.basePath}${this.Config.uploadPath}${path}/${fileName}`, nolog: true});
 
             command
-                .setFfmpegPath(`${this.Config.basePath}/dfs_modules/ffmpeg_linux/bin/ffmpeg`)
+                .setFfmpegPath(this.Config.ffmpegPath)
                 //set the size
                 .withSize(encodeSize)
                 // set fps
