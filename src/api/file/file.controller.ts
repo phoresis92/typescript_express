@@ -1,24 +1,21 @@
 import * as express from 'express';
-import {promises} from 'fs';
 import {Container, Inject} from 'typedi';
-import {extname} from 'path';
 
 import Controller from '../../interfaces/controller.interface';
 import ConfigClass from '../../config/config.dto';
 
 import HttpException from '../../exceptions/HttpException';
 import ErrorResponse from '../../exceptions/ErrorResponse';
-import SuccessResponse from '../../utils/SuccessResponse';
-import FailResponse from '../../utils/FailResponse';
+import SuccessResponse from '../../utils/response/SuccessResponse';
+import FailResponse from '../../utils/response/FailResponse';
 
 import defaultValueMiddleware from "../../middleware/defaultValue.middleware";
 import validationMiddleware from '../../middleware/validation.middleware';
-import responseFormatMiddleware from '../../middleware/responseFormat.middleware';
 
 import FileServiceClass, {FileResponseClass} from './file.service';
 import FileDto, {fileParam, fileParamType} from './file.dto';
 import multer = require('multer');
-import FileHandleClass from '../../utils/fileHandler.class';
+import FileHandleClass from '../../utils/file/fileHandler.class';
 
 /*const upload = multer({
                           storage: multerS3({

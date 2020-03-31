@@ -1,5 +1,5 @@
 import {Container} from 'typedi';
-import pushInterface from '../interfaces/push.interface';
+import pushInterface from '../../interfaces/push.interface';
 import SendPush from './SendPush';
 
 import PushService from './service/push.service';

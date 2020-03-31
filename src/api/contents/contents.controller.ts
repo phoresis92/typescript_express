@@ -2,9 +2,9 @@ import * as express from 'express';
 import ErrorResponse from '../../exceptions/ErrorResponse';
 import HttpException from '../../exceptions/HttpException';
 import Controller from '../../interfaces/controller.interface';
-import FailResponse from '../../utils/FailResponse';
+import FailResponse from '../../utils/response/FailResponse';
 
-import SuccessResponse from '../../utils/SuccessResponse';
+import SuccessResponse from '../../utils/response/SuccessResponse';
 
 import {celebrate, Joi} from 'celebrate';
 
@@ -12,7 +12,7 @@ import {Container, Inject} from 'typedi';
 import ContentsService from './contents.service';
 import {Logger} from "winston";
 
-import PushSender from '../../utils/PushSender';
+import PushSender from '../../utils/push/PushSender';
 
 
 class ContentsController implements Controller {

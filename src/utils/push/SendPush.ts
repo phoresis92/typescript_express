@@ -1,7 +1,7 @@
 import {Inject, Service} from "typedi";
-import Mysql from "../loaders/MysqlTemplate";
+import Mysql from "../../loaders/MysqlTemplate";
 import PushQuery from "./service/push.query";
-import Config from "../config/config.dto";
+import Config from "../../config/config.dto";
 import FCM from 'fcm-node';
 
 // const fcm = new FCM(config.push.fcmKey);

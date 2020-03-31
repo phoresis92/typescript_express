@@ -1,5 +1,5 @@
 import { Container } from 'typedi';
-import FileHandler from '../utils/fileHandler.class';
+import FileHandler from '../utils/file/fileHandler.class';
 import LoggerInstance from './logger';
 import { SuccessResponse, Utils } from '../utils';
 import mysql from './MysqlTemplate';
@@ -15,6 +15,7 @@ export default ({ /*mongoConnection*/ models }: { /*mongoConnection;*/ models: {
     Container.set('utils', new Utils());
     Container.set('success', SuccessResponse);
     Container.set('mysql', mysql);
+
     Container.set('FileHandler', new FileHandler());
 
     return LoggerInstance

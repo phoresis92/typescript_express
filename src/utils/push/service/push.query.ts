@@ -1,6 +1,6 @@
 import {Inject} from 'typedi';
 import Mysql from 'mysql';
-import PushInterface from '../../interfaces/push.interface';
+import PushInterface from '../../../interfaces/push.interface';
 
 export default class PushQuery{
     @Inject('mysql')

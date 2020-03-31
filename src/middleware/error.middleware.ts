@@ -53,8 +53,8 @@ const errorMiddleware = async (error: HttpException, request: Request, response:
 
     }
 
-    console.log(error)
-    logger.error(`[${error.status}|${request.method}|${request.path}]${JSON.stringify(error.message)}`);
+    // console.log(error);
+    logger.error(`🔥[${error.status}|${request.method}|${request.path}]${JSON.stringify(error.message)}`);
 
     if (!response.finished) {
         response

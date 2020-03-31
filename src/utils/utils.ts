@@ -2,8 +2,8 @@
 export default class Utils {
     constructor(){};
 
-    public makeArray (origin: string, split: string): string[] {
-        let arr = origin.split(split);
+    public makeArray (toArr: string, splitChar: string): string[] {
+        let arr = toArr.split(splitChar);
         arr.filter((val, idx)=>{
             return val !== '';
         });

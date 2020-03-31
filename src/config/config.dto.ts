@@ -43,7 +43,8 @@ export default class Config {
     public mysqlUser: string = process.env.RDB_USER!;
     public mysqlPassword: string = process.env.RDB_PASSWORD!;
     public mysqlDb: string = process.env.RDB_DB!;
-
+    public dataString: boolean = Boolean(process.env.RDB_DATA_STRING);
+    public charSet: string = process.env.RDB_CHAR_SET!;
 
     /**
      * Your favorite port
@@ -53,11 +54,17 @@ export default class Config {
     public dfsPort: number = Number(process.env.DFS_PORT);
 
     /**
-     * Your favorite port
+     * File upload path
      */
     public basePath: string = process.env.BASE_PATH!;
     public uploadPath: string = process.env.UPLOAD_PATH!;
     public ffmpegPath: string = path.join(__dirname, '../..', process.env.FFMPEG_PATH!);
+
+    /**
+     * Facebook develop id for Auth
+     */
+    public facebookId: string = process.env.APIKEY_FB_ID!;
+    public facebookSecret: string = process.env.APIKEY_FB_SECRET!;
 
     /**
      * That long string from mlab
@@ -67,7 +74,7 @@ export default class Config {
     /**
      * Your secret sauce
      */
-    // jwtSecret: process.env.JWT_SECRET,
+    public jwtSecret: string = process.env.JWT_SECRET!;
 
     /**
      * Used by winston logger

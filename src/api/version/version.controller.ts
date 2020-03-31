@@ -10,7 +10,7 @@ import Controller from '../../interfaces/controller.interface';
 // import CreatePostDto from './post.dto';
 // import Post from './post.entity';
 
-import SuccessResponse from '../../utils/SuccessResponse';
+import SuccessResponse from '../../utils/response/SuccessResponse';
 
 import {celebrate, Joi} from 'celebrate';
 
@@ -18,7 +18,7 @@ import {Container, Inject} from 'typedi';
 import VersionService from './version.service';
 import {Logger} from "winston";
 import ErrorResponse from "../../exceptions/ErrorResponse";
-import FailResponse from "../../utils/FailResponse";
+import FailResponse from "../../utils/response/FailResponse";
 
 
 class VersionController implements Controller {

@@ -1,19 +1,17 @@
+import express from 'express';
+import session from 'express-session';
 import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
-import path from 'path';
-// import * as multer from 'multer';
-import express from 'express';
-import {Container} from 'typedi';
-// import HttpException from './exceptions/HttpException';
+import {Container, Inject} from 'typedi';
+import {Logger} from "winston";
+import helmet from "helmet";
+const multer = require('multer');
 import Status404Exception from './exceptions/Status404Exception';
 import Controller from './interfaces/controller.interface';
 import errorMiddleware from './middleware/error.middleware';
 import logErrMiddleware from './middleware/dblog.middleware';
-import {Logger} from "winston";
 import Config from "./config/config.dto";
 
-const multer = require('multer');
-// const uploads = multer({dest: '/home/young/workspace/typescript_express/uploads'})
 
 
 class App {
@@ -62,12 +60,26 @@ class App {
   }
 
   private initializeMiddlewares() {
-      console.log(this.Config.server !== 'DFS')
-      console.log(this.Config.server)
     this.app.use(bodyParser.json()); // for parsing application/json
     this.app.use(bodyParser.urlencoded({extended:true})); // for parsing application/x-www-form-urlencoded
     (this.Config.server !== 'DFS' ? this.app.use(multer().none()) : null); // for parsing multipart/form-data
     this.app.use(cookieParser());
+    this.app.use(helmet());
+    this.app.use(helmet.xssFilter());
+    this.app.use(helmet.frameguard());
+    this.app.disable('x-powered-by');
+    // this.app.use(session({
+    //   name: 'session',
+    //   secret: "secret cat",
+    //   keys: ['key1', 'key2'],
+    //   cookie: {
+    //     secure: true,
+    //     httpOnly: true,
+    //     domain: 'example.com',
+    //     path: 'foo/bar',
+    //     expires: new Date(Date.now() + 60 * 60 * 1000)
+    //   }
+    // }));
   }
 
   private initializeErrorHandling() {

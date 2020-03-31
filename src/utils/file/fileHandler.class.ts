@@ -6,9 +6,9 @@ import path, {extname} from 'path';
 import {Inject} from 'typedi';
 import uuid, {v1, v3, v4, v5} from 'uuid';
 import ffmpeg from 'fluent-ffmpeg';
-import ConfigClass from '../config/config.dto';
+import ConfigClass from '../../config/config.dto';
 
-import ErrorResponse from '../exceptions/ErrorResponse';
+import ErrorResponse from '../../exceptions/ErrorResponse';
 
 // @ts-ignore
 // const ffmpegPath: string = `${__basedir}${this.Config.ffmpegPath}`;

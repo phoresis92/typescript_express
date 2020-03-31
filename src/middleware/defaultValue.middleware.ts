@@ -1,7 +1,7 @@
 import * as express from 'express';
 import HttpException from '../exceptions/HttpException';
-import FailResponse from '../utils/FailResponse';
-import SuccessResponse from '../utils/SuccessResponse';
+import FailResponse from '../utils/response/FailResponse';
+import SuccessResponse from '../utils/response/SuccessResponse';
 
 class defaultValueMiddleware {
 

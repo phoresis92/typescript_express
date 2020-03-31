@@ -7,7 +7,7 @@ import gm from 'gm';
 
 import ConfigClass from '../../config/config.dto';
 
-import FileHandlerClass from '../../utils/fileHandler.class';
+import FileHandlerClass from '../../utils/file/fileHandler.class';
 import FileDAOClass from './file.dao';
 import FileDtoClass/*, { ResponseInterface }*/ from './file.dto';
 

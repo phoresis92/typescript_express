@@ -1,19 +1,17 @@
-/**
- * Created by bestist on 2016-06-13.
- */
 
 const Mysql = require('mysql');
 var moment = require('moment');
 
-const config = require('../config').default;
-
+const config = new (require('../config/config.dto').default) ();
 
 var DbConfig = {
     host: config.mysqlHost,
     port: config.mysqlPort,
     user: config.mysqlUser,
     password: config.mysqlPassword,
-    database: config.mysqlDb
+    database: config.mysqlDb,
+    dataString: config.dataString,
+    charset: config.charSet
 };
 
 var DbConfig2 = {
@@ -21,7 +19,9 @@ var DbConfig2 = {
     port: config.mysqlPort,
     user: config.mysqlUser,
     password: config.mysqlPassword,
-    database: config.mysqlDb
+    database: config.mysqlDb,
+    dataString: config.dataString,
+    charset: config.charSet
 };
 
 DbConfig2.multipleStatements = true;

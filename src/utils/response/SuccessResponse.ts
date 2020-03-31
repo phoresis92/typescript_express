@@ -1,7 +1,7 @@
 import {NextFunction, Request} from 'express';
 import { Container } from 'typedi';
-import ResponseInterface from '../interfaces/response.interface';
-import Config from '../config/config.dto'
+import ResponseInterface from '../../interfaces/response.interface';
+import Config from '../../config/config.dto'
 
 class SuccessResponse implements ResponseInterface{
     private logger = Container.get('logger');

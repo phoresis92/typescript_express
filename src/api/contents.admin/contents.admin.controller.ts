@@ -5,22 +5,22 @@ import HttpException from '../../exceptions/HttpException';
 // import Contents from '../entity/contents/contents.entity';
 // import PostNotFoundException from '../exceptions/PostNotFoundException';
 import Controller from '../../interfaces/controller.interface';
-import FailResponse from '../../utils/FailResponse';
+import FailResponse from '../../utils/response/FailResponse';
 // import RequestWithUser from '../interfaces/requestWithUser.interface';
 // import authMiddleware from '../middleware/auth.middleware';
 // import validationMiddleware from '../middleware/validation.middleware';
 // import CreatePostDto from './post.dto';
 // import Post from './post.entity';
 
-import success from '../../utils/SuccessResponse';
+import success from '../../utils/response/SuccessResponse';
 
 import {celebrate, Joi} from 'celebrate';
 
 import {Container, Inject} from 'typedi';
 import ContentsAdminService from './contents.admin.service';
-import SuccessResponse from "../../utils/SuccessResponse";
+import SuccessResponse from "../../utils/response/SuccessResponse";
 import ContentsService from "../contents/contents.service";
-import PushSender from "../../utils/PushSender";
+import PushSender from "../../utils/push/PushSender";
 
 
 class ContentsController implements Controller {
