@@ -1,8 +1,11 @@
 import { Container } from 'typedi';
 import FileHandler from '../utils/file/fileHandler.class';
+
 import LoggerInstance from './logger';
-import { SuccessResponse, Utils } from '../utils';
+import ConfigClass from '../config/config.dto';
+import { Utils } from '../utils';
 import mysql from './MysqlTemplate';
+
 // import config from '../config/index.ts';
 
 export default ({ /*mongoConnection*/ models }: { /*mongoConnection;*/ models: { name: string; model: any }[] }) => {
@@ -11,9 +14,10 @@ export default ({ /*mongoConnection*/ models }: { /*mongoConnection;*/ models: {
       Container.set(m.name, m.model);
     });
 
+    const Config: ConfigClass = Container.get('Config');
+
     Container.set('logger', LoggerInstance);
     Container.set('utils', new Utils());
-    Container.set('success', SuccessResponse);
     Container.set('mysql', mysql);
 
     Container.set('FileHandler', new FileHandler());

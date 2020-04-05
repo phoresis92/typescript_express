@@ -1,6 +1,6 @@
 import {Equals, Allow, IsNotEmpty, IsDefined, validate, validateOrReject, Contains, IsInt, IsNumber, IsString, IsMultibyte, IsOptional, ValidateNested, Length, IsEmail, IsFQDN, IsDate, Min, Max} from "class-validator";
 
-class LoginDto {
+class SigninDto {
     @IsNotEmpty()
     public joinType: string;
 
@@ -30,4 +30,4 @@ class LoginDto {
 
 }
 
-export default LoginDto;
+export default SigninDto;

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router } from 'index.d.ts';
 
 interface Controller {
   path: string;

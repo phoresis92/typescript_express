@@ -1,3 +1,4 @@
+import * as uuid from 'uuid'
 
 export default class Utils {
     constructor(){};
@@ -10,4 +11,10 @@ export default class Utils {
 
         return arr;
     }
+
+    public makeUserId (){
+        const token = uuid.v4().split('-');
+        return token[2] + token[1] + token[0] + token[3] + token[4]
+    }
+
 }

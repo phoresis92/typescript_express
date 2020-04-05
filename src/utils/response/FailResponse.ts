@@ -29,14 +29,19 @@ class FailResponse implements ResponseInterface{
         this.responseCode = responseCode;
         this.message = message;
 
-        this.callNext();
-
-        return {
+        const toClientResponseObj = {
             result: false,
             path: `${this.request.path}/${this.responseCode}`,
             resultData: this.resultData,
             message: (this.Config.nodeEnv == 'development' ? this.message : null)
-        }
+        };
+
+        this.request.body.toClientResponseObj = toClientResponseObj;
+
+        this.callNext();
+
+        return toClientResponseObj;
+
     }
 
 };

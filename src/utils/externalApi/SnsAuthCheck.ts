@@ -5,7 +5,7 @@ import {Logger} from 'winston';
 import fbAdmin from 'firebase-admin';
 
 import ConfigClass from '../../config/config.dto';
-import ErrorResponse from '../../exceptions/ErrorResponse';
+import ErrorResponse from '../response/ErrorResponse';
 
 let serviceAccount = 'TEMP'; //require('../../../APIKEY_FIREBASE_ACCOUNT/allthatkorea-5bfcd-a2859e897ba8');
 let APIKEY_FIREBASE_PROJECT_NAME = 'TEMP'; //require('../../../APIKEY_FIREBASE_ACCOUNT/allthatkorea-5bfcd-a2859e897ba8');
@@ -18,12 +18,10 @@ let APIKEY_FIREBASE_PROJECT_NAME = 'TEMP'; //require('../../../APIKEY_FIREBASE_A
 
 type optionType = {method: string, url: string, headers?: {Authorization: string}}
 
-export default class LoginAuthCheck {
+export default class SnsAuthCheck {
 
-    @Inject()
-    private Config: ConfigClass;
-    @Inject()
-    private logger: Logger;
+    private Config: ConfigClass = Container.get('Config');
+    private logger: Logger = Container.get('logger');
 
     private options: optionType;
 
@@ -105,13 +103,14 @@ export default class LoginAuthCheck {
             url: `${baseUrl}/oauth/access_token?client_id=${this.Config.facebookId}&client_secret=${this.Config.facebookSecret}&grant_type=client_credentials`,
         })
             .then((response: any)=>{
+                console.log(response)
                 return response.data.access_token;
 
             })
-            .catch((err: Error)=>{
+            .catch((err: any)=>{
                 this.logger.error('Facebook service setting Error: APIKEY_FB');
-                console.log(err);
-                return false;
+                console.log(err.response.status);
+                throw new ErrorResponse(500, '[FACEBOOK] Invalid Client ID', '500');
 
             });
 

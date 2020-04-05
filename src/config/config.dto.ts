@@ -67,6 +67,12 @@ export default class Config {
     public facebookSecret: string = process.env.APIKEY_FB_SECRET!;
 
     /**
+     * Redis Config
+     */
+    public redisPort: number = parseInt(process.env.REDIS_PORT!) | 6379;
+    public redisHost: string = process.env.REDIS_HOST!;
+
+    /**
      * That long string from mlab
      */
     // databaseURL: process.env.MONGODB_URI,

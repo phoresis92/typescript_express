@@ -1,21 +1,20 @@
-import * as express from 'express';
+import {Router, Request, Response, NextFunction} from 'express';
 import {Container, Inject} from 'typedi';
 
 import Controller from '../../interfaces/controller.interface';
 import ConfigClass from '../../config/config.dto';
 
 import HttpException from '../../exceptions/HttpException';
-import ErrorResponse from '../../exceptions/ErrorResponse';
-import SuccessResponse from '../../utils/response/SuccessResponse';
-import FailResponse from '../../utils/response/FailResponse';
+import JwtValidClass from '../../middleware/jwtValid.middleware';
 
-import defaultValueMiddleware from "../../middleware/defaultValue.middleware";
-import validationMiddleware from '../../middleware/validation.middleware';
+import middleware from '../../middleware';
+import ResponseClass from '../../utils/response';
 
 import FileServiceClass, {FileResponseClass} from './file.service';
 import FileDto, {fileParam, fileParamType} from './file.dto';
 import multer = require('multer');
 import FileHandleClass from '../../utils/file/fileHandler.class';
+
 
 /*const upload = multer({
                           storage: multerS3({
@@ -27,7 +26,7 @@ import FileHandleClass from '../../utils/file/fileHandler.class';
 
 class FileController implements Controller {
     public path = '/file';
-    public router = express.Router();
+    public router = Router();
 
     private Config: ConfigClass = Container.get('Config');
     private FileHandler: FileHandleClass = Container.get('FileHandler');
@@ -37,8 +36,10 @@ class FileController implements Controller {
                                  limits: { fileSize: 20 * 1024 * 1024 },
     }/*{dest: this.Config.basePath + this.Config.uploadPath}*/);
 
+    private JwtValid: JwtValidClass;
 
     constructor() {
+        this.JwtValid = new middleware.JwtValid();
         this.initializeRoutes();
     }
 
@@ -48,26 +49,28 @@ class FileController implements Controller {
                 , this.downloadFile)
 
             .post(`/file/img`
+                , this.JwtValid.decodeToken()
+                , this.JwtValid.userIdFromUuid()
                 , this.uploads.fields(fileParam)
-                , new defaultValueMiddleware()
+                , new middleware.defaultValue()
                       .setDefault0(['thumbWidth', 'thumbHeight', 'encodeFps'])
                       .setDefault1(['useUniqueFileName', 'useDateFolder', 'makeThumb', 'thumbOption'])
                       .handle()
-                , validationMiddleware(FileDto, false)
+                , middleware.validation(FileDto, false)
                 , this.uploadImages)
 
             .post(`/file/mov`
                 , this.uploads.fields(fileParam)
-                , new defaultValueMiddleware()
+                , new middleware.defaultValue()
                       .setDefault0(['thumbWidth', 'thumbHeight', 'encodeFps'])
                       .setDefault1(['useUniqueFileName', 'useDateFolder', 'makeThumb', 'thumbOption'])
                       .handle()
-                , validationMiddleware(FileDto, false)
+                , middleware.validation(FileDto, false)
                 , this.uploadVideos);
 
     }
 
-    private downloadFile = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
+    private downloadFile = async (request: Request, response: Response, next: NextFunction) => {
         try {
 
             const filePath: string = decodeURI(request.params.filePath);
@@ -79,16 +82,16 @@ class FileController implements Controller {
             const stats = await this.FileHandler.getStat(path);
 
             if(!stats){
-                response.status(404).send(new FailResponse(request, request.params, next).make({}, '01', 'Not Exist File'));
+                response.status(404).send(new ResponseClass.fail(request, request.params, next).make({}, '01', 'Not Exist File'));
                 return;
             }
 
-            new SuccessResponse(request, request.params, next).make({stats}, '01');
+            new ResponseClass.success(request, request.params, next).make({stats}, '01');
             response.sendFile(path);
 
         } catch (e) {
-            if (e instanceof ErrorResponse) {
-                response.status(e.status).send(request.body.FailResponse.make({}, e.errorCode, e.message));
+            if (e.errorCode) {
+                response.status(e.status).send(new ResponseClass.fail(request, request.params, next).make({}, e.errorCode, e.message));
                 return;
             }
 
@@ -98,17 +101,26 @@ class FileController implements Controller {
 
     };
 
-    private uploadImages = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
+    private uploadImages = async (request: Request, response: Response, next: NextFunction) => {
         try {
+
+
+
+            console.log(request.body.token);
+            // console.log(response.token);
+
             const FileService: FileServiceClass = Container.get(FileServiceClass);
-            let responseObj: FileResponseClass = await FileService.uploadImageService(request.body.DtoClass);
+            let responseObj: FileResponseClass = await FileService.uploadImageService(request.body.DtoClass, request.body.token);
 
             delete request.body.DtoClass;
-            response.send(new SuccessResponse(request, request.params, next).make(responseObj, responseObj.code));
+            response.send(new ResponseClass.success(request, request.params, next).make(responseObj, responseObj.code));
 
         } catch (e) {
-            if (e instanceof ErrorResponse) {
-                response.status(e.status).send(new FailResponse(request, request.params, next).make({}, e.errorCode, e.message));
+            delete request.body.DtoClass;
+
+            if (e.errorCode) {
+                response.status(e.status).send(new ResponseClass.fail(request, request.params, next).make({}, e.errorCode, e.message));
+                return;
             }
             console.log(e);
 
@@ -118,17 +130,20 @@ class FileController implements Controller {
 
     };
 
-    private uploadVideos = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
+    private uploadVideos = async (request: Request, response: Response, next: NextFunction) => {
         try {
             const FileService: FileServiceClass = Container.get(FileServiceClass);
-            let responseObj: FileResponseClass = await FileService.uploadVideoService(request.body.DtoClass);
+            let responseObj: FileResponseClass = await FileService.uploadVideoService(request.body.DtoClass, request.body.token);
 
             delete request.body.DtoClass;
-            response.send(new SuccessResponse(request, request.params, next).make(responseObj, responseObj.code));
+            response.send(new ResponseClass.success(request, request.params, next).make(responseObj, responseObj.code));
 
         } catch (e) {
-            if (e instanceof ErrorResponse) {
-                response.status(e.status).send(new FailResponse(request, request.params, next).make({}, e.errorCode, e.message));
+            delete request.body.DtoClass;
+
+            if (e.errorCode) {
+                response.status(e.status).send(new ResponseClass.fail(request, request.params, next).make({}, e.errorCode, e.message));
+                return;
             }
             console.log(e);
 

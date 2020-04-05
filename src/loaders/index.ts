@@ -2,6 +2,7 @@
 // import validateEnv from './validateEnv';
 // import Config from '../config/config.dto';
 
+import redis from 'redis';
 import {Container} from 'typedi';
 import Config from '../config/config.dto';
 
@@ -66,5 +67,15 @@ export default async () => {
     // await jobsLoader({ agenda });
     // console.log('✌️ Jobs loaded');
     logger.info('✌️ Jobs loaded');
+
+
+    const redisClient = redis.createClient();
+    redisClient.on('error', (err)=>{
+        throw new Error('Redis Setup Error');
+    });
+
+    Container.set('redis', redis.createClient());
+
+
 
 };

@@ -1,7 +1,7 @@
 import {getRepository} from 'typeorm';
 import Contents from '../../entity/contents/contents.entity';
 import Utils from '../../utils/utils';
-import {NextFunction} from "express";
+import {NextFunction} from "index.d.ts";
 // import * as express from "./post.controller";
 // import CreatePostDto from "./post.dto";
 // import PostNotFoundException from "../exceptions/PostNotFoundException";
@@ -13,7 +13,7 @@ import {Container, Service, Inject} from 'typedi';
 import {Logger} from "winston";
 import Mysql from "mysql";
 import HttpException from "../../exceptions/HttpException";
-import ErrorResponse from "../../exceptions/ErrorResponse";
+import ErrorResponse from "../../utils/response/ErrorResponse";
 
 enum contentsType {
     NOTICE = 'NOTICE',

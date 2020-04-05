@@ -1,24 +1,22 @@
 import {Request, Response, NextFunction} from 'express';
 import {Container} from 'typedi';
-import LogErr from '../entity/log/log_error.entity';
+// import LogErr from '../entity/log/log_error.entity';
 // import LogErr from '../entity/log/log_error.entity';
 // import HttpException from '../exceptions/HttpException';
-import {SuccessResponse} from '../utils';
 import ConfigClass from '../config/config.dto';
 import {LogErrQuery} from '../query';
+import ResponseInterface from '../interfaces/response.interface';
 
 import {getRepository} from 'typeorm';
 import {Logger} from "winston";
-// import Mysql from 'mysql';
 import Mysql from '../loaders/MysqlTemplate';
 
 
-const dbLogMiddleware = async (nextData: SuccessResponse | Error, request: Request, response: Response, next: NextFunction) => {
+const dbLogMiddleware = async (nextData: ResponseInterface | Error, request: Request, response: Response, next: NextFunction) => {
     if (nextData instanceof Error) {
         next(nextData);
         return;
     }
-
 
     const logger: Logger = Container.get('logger');
     const Config: ConfigClass = Container.get('Config');
@@ -38,7 +36,7 @@ const dbLogMiddleware = async (nextData: SuccessResponse | Error, request: Reque
                        JSON.stringify(nextData.params),
                        JSON.stringify(request.query),
                        JSON.stringify(request.body),
-                       JSON.stringify(nextData.resultData)
+                       JSON.stringify(request.body.toClientResponseObj)
                    ]);
         // const newLog = logErrRepository.create
         // ({

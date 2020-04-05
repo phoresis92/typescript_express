@@ -1,4 +1,4 @@
-import * as express from 'express';
+import * as express from 'index.d.ts';
 import HttpException from '../../exceptions/HttpException';
 // import {getRepository, createConnection} from 'typeorm';
 // import Contents from '../entity/contents/contents.entity';
@@ -17,7 +17,7 @@ import {celebrate, Joi} from 'celebrate';
 import {Container, Inject} from 'typedi';
 import VersionService from './version.service';
 import {Logger} from "winston";
-import ErrorResponse from "../../exceptions/ErrorResponse";
+import ErrorResponse from "../../utils/response/ErrorResponse";
 import FailResponse from "../../utils/response/FailResponse";
 
 

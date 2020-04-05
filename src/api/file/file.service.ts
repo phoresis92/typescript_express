@@ -1,5 +1,5 @@
 import {promises} from 'fs';
-import {Container, Service, Inject} from 'typedi';
+import {Container, Service, Inject, Token} from 'typedi';
 import {extname, basename} from 'path';
 import ffmpeg from 'fluent-ffmpeg';
 import moment from 'moment';
@@ -8,10 +8,12 @@ import gm from 'gm';
 import ConfigClass from '../../config/config.dto';
 
 import FileHandlerClass from '../../utils/file/fileHandler.class';
+import ErrorResponse from '../../utils/response/ErrorResponse';
 import FileDAOClass from './file.dao';
 import FileDtoClass/*, { ResponseInterface }*/ from './file.dto';
 
-import Mysql from '../../loaders/MysqlTemplate';
+import TokenInterface from '../../interfaces/token.interface';
+
 import sql from 'mysql';
 
 @Service('FileService')
@@ -30,109 +32,107 @@ export default class FileService {
     constructor() {
     };
 
-    public uploadImageService = async (FileDto: FileDtoClass): Promise<FileResponseClass> => {
+    public uploadImageService = async (FileDto: FileDtoClass, token: TokenInterface): Promise<FileResponseClass> => {
+        let returnObj: FileResponseClass = new FileResponseClass();
+
         if (FileDto.makeThumb == 1 && (FileDto.thumbWidth == 0 || FileDto.thumbHeight == 0)) {
-            throw new Error('@Thumbnail Scale Error');
+            throw new ErrorResponse(400, '@Thumbnail Scale Error', '01');
+            return returnObj;
         }
 
-        return new Promise(async (resolve, reject) => {
+        let baseRoot: string = `${this.Config.basePath}${this.Config.uploadPath}`;
+        let path: string = `/${FileDto.filePath}`;
+        let fileName: string = '';
+        const originName: string = FileDto.fileData.originalname;
+        const ext: string = extname(originName);
 
-            let baseRoot: string = `${this.Config.basePath}${this.Config.uploadPath}`;
-            let path: string = `/${FileDto.filePath}`;
-            let fileName: string = '';
-            const originName: string = FileDto.fileData.originalname;
-            const ext: string = extname(originName);
 
-            let returnObj: FileResponseClass = new FileResponseClass();
+        if (!this.allowImageExt.includes(ext)) {
+            throw new Error('@Ext Not Allowed');
+        }
 
-            if (!this.allowImageExt.includes(ext)) {
-                throw new Error('@Ext Not Allowed');
-            }
+        if (FileDto.useDateFolder === 1) {
+            path += `/${moment().format('YYYYMMDD')}`;
+        }
 
-            if (FileDto.useDateFolder === 1) {
-                path += `/${moment().format('YYYYMMDD')}`;
-            }
+        if (FileDto.useUniqueFileName === 1) {
+            fileName = `${this.FileHandler.getUniqueName()}${ext}`;
+        } else {
+            fileName = originName;
+        }
 
-            if (FileDto.useUniqueFileName === 1) {
-                fileName = `${this.FileHandler.getUniqueName()}${ext}`;
-            } else {
-                fileName = originName;
-            }
+        const result = await this.FileHandler.uploadFileByBuffer(`${baseRoot}${path}`, fileName, FileDto.fileData.buffer);
+        if (!result) {
+            throw new Error('@File Upload Fail');
+        }
 
-            const result = await this.FileHandler.uploadFileByBuffer(`${baseRoot}${path}`, fileName, FileDto.fileData.buffer);
+        // @ts-ignore
+        const originSize: { width: number, height: number } = await this.FileHandler.getDimension(FileDto.fileData.buffer);
+
+        returnObj.userId = token.userId;
+        returnObj.uuid = token.uuid;
+        returnObj.fileName = fileName;
+        returnObj.fileExtenstion = ext;
+        returnObj.filePath = `${path}`;
+        returnObj.fileWidth = originSize.width;
+        returnObj.fileHeight = originSize.height;
+        returnObj.fileSize = FileDto.fileData.size;
+        returnObj.fileType = 'img';
+        returnObj.option1 = FileDto.option1;
+        returnObj.option2 = FileDto.option2;
+        returnObj.option3 = FileDto.option3;
+        returnObj.targetType = FileDto.targetType || 'TEMP';
+        returnObj.targetKey = FileDto.targetKey || 'TEMP';
+
+        const thumbName = `${basename(fileName, ext)}_thumb${ext}`;
+
+        if (FileDto.makeThumb === 0 && FileDto.thumbData === undefined) {
+            returnObj.code = '01';
+
+            await this.FileDAO.insertFile(returnObj);
+            return returnObj;
+
+        } else if (FileDto.thumbData !== undefined) {
+            const result = await this.FileHandler.uploadFileByBuffer(`${baseRoot}${path}`, thumbName, FileDto.thumbData.buffer);
 
             if (!result) {
                 throw new Error('@File Upload Fail');
             }
 
             // @ts-ignore
-            const originSize: { width: number, height: number } = await this.FileHandler.getDimension(FileDto.fileData.buffer);
+            const thumbSize: { width: number, height: number } = await this.FileHandler.getDimension(FileDto.thumbData.buffer);
 
-            returnObj.userId = FileDto.userId;
-            returnObj.fileName = fileName;
-            returnObj.fileExtenstion = ext;
-            returnObj.filePath = `${path}`;
-            returnObj.fileWidth = originSize.width;
-            returnObj.fileHeight = originSize.height;
-            returnObj.fileSize = FileDto.fileData.size;
-            returnObj.fileType = 'img';
-            returnObj.option1 = FileDto.option1;
-            returnObj.option2 = FileDto.option2;
-            returnObj.option3 = FileDto.option3;
-            returnObj.targetType = FileDto.targetType || 'TEMP';
-            returnObj.targetKey = FileDto.targetKey || 'TEMP';
+            returnObj.thumbName = thumbName;
+            returnObj.thumbWidth = thumbSize.width;
+            returnObj.thumbHeight = thumbSize.height;
+            returnObj.code = '02';
 
-            const thumbName = `${basename(fileName, ext)}_thumb${ext}`;
+            await this.FileDAO.insertFile(returnObj);
+            return returnObj;
 
-            if (FileDto.makeThumb === 0 && FileDto.thumbData === undefined) {
-                returnObj.code = '01';
+        } else {
+            // @ts-ignore
+            const {resizeWidth, resizeHeight} = await this.FileHandler.rescaleCalc(originSize.width, originSize.height, FileDto.thumbWidth, FileDto.thumbHeight, FileDto.thumbOption);
 
-                await this.FileDAO.insertFile(returnObj);
-                resolve(returnObj);
+            await this.FileHandler.getThumbnail(FileDto.fileData.buffer, resizeWidth, resizeHeight
+                , `${baseRoot}${path}/${thumbName}`, 100);
 
-            } else if (FileDto.thumbData !== undefined) {
-                const result = await this.FileHandler.uploadFileByBuffer(`${baseRoot}${path}`, thumbName, FileDto.thumbData.buffer);
+            // @ts-ignore
+            const thumbSize: { width: number, height: number } = await this.FileHandler.getDimension(`${baseRoot}${path}/${thumbName}`);
 
-                if (!result) {
-                    throw new Error('@File Upload Fail');
-                }
+            returnObj.thumbName = thumbName;
+            returnObj.thumbWidth = thumbSize.width;
+            returnObj.thumbHeight = thumbSize.height;
+            returnObj.code = '03';
 
-                // @ts-ignore
-                const thumbSize: { width: number, height: number } = await this.FileHandler.getDimension(FileDto.thumbData.buffer);
+            await this.FileDAO.insertFile(returnObj);
+            return returnObj;
 
-                returnObj.thumbName = thumbName;
-                returnObj.thumbWidth = thumbSize.width;
-                returnObj.thumbHeight = thumbSize.height;
-                returnObj.code = '02';
-
-                await this.FileDAO.insertFile(returnObj);
-                resolve(returnObj);
-
-            } else {
-                // @ts-ignore
-                const {resizeWidth, resizeHeight} = await this.FileHandler.rescaleCalc(originSize.width, originSize.height, FileDto.thumbWidth, FileDto.thumbHeight, FileDto.thumbOption);
-
-                await this.FileHandler.getThumbnail(FileDto.fileData.buffer, resizeWidth, resizeHeight
-                    , `${baseRoot}${path}/${thumbName}`, 100);
-
-                // @ts-ignore
-                const thumbSize: { width: number, height: number } = await this.FileHandler.getDimension(`${baseRoot}${path}/${thumbName}`);
-
-                returnObj.thumbName = thumbName;
-                returnObj.thumbWidth = thumbSize.width;
-                returnObj.thumbHeight = thumbSize.height;
-                returnObj.code = '03';
-
-                await this.FileDAO.insertFile(returnObj);
-                resolve(returnObj);
-
-            }
-
-        });
+        }
 
     };
 
-    public uploadVideoService = async (FileDto: FileDtoClass): Promise<FileResponseClass> => {
+    public uploadVideoService = async (FileDto: FileDtoClass, token: TokenInterface): Promise<FileResponseClass> => {
         // if (FileDto.makeThumb == 1 && (FileDto.thumbWidth == 0 || FileDto.thumbHeight == 0)) {
         //     throw new Error('@Thumbnail Scale Error');
         // }
@@ -177,7 +177,7 @@ export default class FileService {
             // @ts-ignore
             const {width, height, duration, size, bitRate} = await this.FileHandler.getVideoMeta(`${baseRoot}${path}/${convertName}`);
 
-            returnObj.userId = FileDto.userId;
+            returnObj.userId = token.userId;
             returnObj.fileName = convertName;
             returnObj.fileExtenstion = extname(convertName);
             returnObj.filePath = `${path}`;
@@ -251,6 +251,8 @@ export default class FileService {
 
 export class FileResponseClass extends FileDtoClass {
 
+    userId: number;
+    uuid: string;
     code: string;
     fileExtenstion: string;
     thumbExtenstion: string;
@@ -272,6 +274,7 @@ export class FileResponseClass extends FileDtoClass {
                 target_type = ${sql.escape(this.targetType)}
                 , target_key = ${sql.escape(this.targetKey)}
                 , user_id = ${sql.escape(this.userId)}
+                , uuid = ${sql.escape(this.uuid)}
                 , file_type = ${sql.escape(this.fileType)}
                 , file_path = ${sql.escape(this.filePath)}
                 , file_name = ${sql.escape(this.fileName)}

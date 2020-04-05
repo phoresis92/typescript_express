@@ -1,8 +1,8 @@
-
 const Mysql = require('mysql');
+const {promisify} = require('util');
 var moment = require('moment');
 
-const config = new (require('../config/config.dto').default) ();
+const config = new (require('../config/config.dto').default)();
 
 var DbConfig = {
     host: config.mysqlHost,
@@ -230,3 +230,34 @@ exports.commit = function (query, next) {
     })
 
 };
+
+exports.getConnTransaction = function () {
+    return new Promise((resolve, reject) => {
+        try {
+            pool.getConnection(async (err, conn) => {
+                if (err) {
+                    try {
+                        conn.release();
+                    } catch (e) {
+                    }
+                    reject(err);
+                    throw err;
+
+                }
+
+                await conn.beginTransaction();
+
+                const querySync = promisify(conn.query).bind(conn);
+
+                resolve([conn, querySync]);
+
+            })
+
+        } catch (e) {
+            console.log(e);
+            reject(e)
+
+        }
+    })
+}
+

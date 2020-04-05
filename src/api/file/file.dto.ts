@@ -7,9 +7,6 @@ class FileDto {
     @IsNotEmpty()
     public filePath: string;
 
-    @IsNotEmpty()
-    public userId: string;
-
     @IsString()
     public encodeSize: string; // 50%
 

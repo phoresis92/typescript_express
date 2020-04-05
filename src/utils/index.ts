@@ -1,7 +1,7 @@
-import SuccessResponse from './response/SuccessResponse';
 import Utils from './utils';
+import Response from './response';
 
 export {
-  SuccessResponse,
-  Utils
+  Utils,
+  Response
 }

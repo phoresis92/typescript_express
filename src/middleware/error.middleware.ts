@@ -20,20 +20,23 @@ const errorMiddleware = async (error: HttpException, request: Request, response:
     const message = error.message || 'Something went wrong';
     const params = error.params || {};
 
+    console.log(request.body)
+
     try {
         const recordSet = await Mysql.exec(logErrQuery.create(),
-                                           [
-                                               status,
-                                               Config.server,
-                                               1,
-                                               request.method,
-                                               request.path,
-                                               JSON.stringify(request.headers),
-                                               JSON.stringify(params),
-                                               JSON.stringify(request.query),
-                                               JSON.stringify(request.body),
-                                               JSON.stringify(message)
-                                           ]);
+            [
+               status,
+               Config.server,
+               1,
+               request.method,
+               request.path,
+               JSON.stringify(request.headers),
+               JSON.stringify(params),
+               JSON.stringify(request.query),
+               JSON.stringify(request.body),
+               JSON.stringify(message)
+            ]
+        );
         //     const newLog = logErrRepository.create({
         //                                                status_code: error.status,
         //                                                server: 1,
@@ -53,17 +56,17 @@ const errorMiddleware = async (error: HttpException, request: Request, response:
 
     }
 
-    // console.log(error);
+    console.log(error);
     logger.error(`🔥[${error.status}|${request.method}|${request.path}]${JSON.stringify(error.message)}`);
 
     if (!response.finished) {
         response
             .status(status)
             .send({
-                      result: false,
-                      message,
-                      status,
-                  });
+                result: false,
+                message,
+                status,
+            });
 
     }
 };

@@ -1,4 +1,4 @@
-import { NextFunction } from 'express';
+import { NextFunction } from 'index.d.ts';
 
 interface Response {
   resultData: any;
