@@ -1,11 +1,13 @@
 import {randomBytes} from "crypto";
 import argon2 from "argon2";
 import {Inject, Service} from 'typedi';
+import mysql from 'mysql';
 
 import Mysql from '../../loaders/MysqlTemplate';
 import ErrorResponse from '../../utils/response/ErrorResponse';
 
 import UtilsClass from '../../utils/utils';
+import SignupDtoClass from './dto/signup.dto';
 
 @Service()
 export default class AuthDAO{
@@ -95,16 +97,27 @@ export default class AuthDAO{
 
     }
 
-    public async deleteSessionBySessionId (sessionId: string): Promise<any> {
+    public async deleteSessionBySessionId (sessionId: string, conn?: mysql.Connection): Promise<any> {
 
         let query =`
             DELETE FROM t_nf_user_session
             WHERE session_id = ?
             `;
 
-        const recordSet = await Mysql.exec(query, [sessionId]);
+        if(conn){
+            conn.query(query, (err, result)=>{
+                if(err){
 
-        return recordSet;
+                }
+
+                return result;
+            })
+        }else{
+            const recordSet = await Mysql.exec(query, [sessionId]);
+
+            return recordSet;
+
+        }
 
     }
 
@@ -152,16 +165,16 @@ export default class AuthDAO{
 
     }
 
-    public async signupUser (joinType: string, nickName: string, loginId: string, password: string, agreeUse: number, agreePersonalInfo: number): Promise<{uuid: any, user_id: number}> {
+    public async signupUser (SignupDto: SignupDtoClass/*joinType: string, nickName: string, loginId: string, password: string, agreeUse: number, agreePersonalInfo: number*/): Promise<{uuid: any, user_id: number}> {
 
         let hashedPassword: string | null;
 
-        if(joinType !== 'NORMAL'){
+        if(SignupDto.joinType !== 'NORMAL'){
             hashedPassword = null;
 
         }else{
             const salt = randomBytes(32);
-            hashedPassword = await argon2.hash(password, { salt });
+            hashedPassword = await argon2.hash(SignupDto.password, { salt });
 
         }
 
@@ -178,14 +191,15 @@ export default class AuthDAO{
                     , user_type = 'USER'
                     , nick_name = ?
                     , agree_use = ?
-                    , agree_use_date = ${agreeUse === 1 ? `NOW()` : `NULL`} 
+                    , agree_use_date = ${SignupDto.agreeUse === 1 ? `NOW()` : `NULL`} 
                     , agree_personal_info = ?
-                    , agree_personal_info_date = ${agreePersonalInfo === 1 ? `NOW()` : `NULL`} 
+                    , agree_personal_info_date = ${SignupDto.agreePersonalInfo === 1 ? `NOW()` : `NULL`} 
             `;
 
-            const insertUserResult = await querySync(insertUser, [uuid, nickName, agreeUse, agreePersonalInfo]);
+            const insertUserResult = await querySync(insertUser, [uuid, SignupDto.nickName, SignupDto.agreeUse, SignupDto.agreePersonalInfo]);
             if(insertUserResult.affectedRows === 0){
                 conn.rollback();
+                throw new Error('[Error] Insert User');
             }
 
             user_id = insertUserResult.insertId;
@@ -195,9 +209,24 @@ export default class AuthDAO{
                 SET ?
             `;
 
-            const insertLoginResult = await querySync(insertUserLogin, {join_type: joinType, login_id: loginId, uuid, user_id: insertUserResult.insertId, password: hashedPassword}/*[joinType, loginId, uuid, insertUserResult.insertId]*/);
+            const insertLoginResult = await querySync(insertUserLogin,
+                {join_type: SignupDto.joinType, login_id: SignupDto.loginId, uuid, user_id: insertUserResult.insertId, password: hashedPassword}
+            );
             if(insertLoginResult.affectedRows === 0){
                 conn.rollback();
+                throw new Error('[Error] Insert UserLogin');
+            }
+
+            const updateFileResult = await querySync(`
+                UPDATE t_nf_file
+                SET target_type = 'USER'
+                    , target_key = ?
+                WHERE file_seq = ?
+            `, [uuid, SignupDto.fileSeq]);
+
+            if(updateFileResult.affectedRows === 0){
+                conn.rollback;
+                throw new Error('[Error] Update File Temp');
             }
 
             await conn.commit();

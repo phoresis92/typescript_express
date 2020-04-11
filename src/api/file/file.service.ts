@@ -103,6 +103,7 @@ export default class FileService {
             const thumbSize: { width: number, height: number } = await this.FileHandler.getDimension(FileDto.thumbData.buffer);
 
             returnObj.thumbName = thumbName;
+            returnObj.thumbExtenstion = extname(thumbName);
             returnObj.thumbWidth = thumbSize.width;
             returnObj.thumbHeight = thumbSize.height;
             returnObj.code = '02';
@@ -121,6 +122,7 @@ export default class FileService {
             const thumbSize: { width: number, height: number } = await this.FileHandler.getDimension(`${baseRoot}${path}/${thumbName}`);
 
             returnObj.thumbName = thumbName;
+            returnObj.thumbExtenstion = extname(thumbName);
             returnObj.thumbWidth = thumbSize.width;
             returnObj.thumbHeight = thumbSize.height;
             returnObj.code = '03';
@@ -178,6 +180,7 @@ export default class FileService {
             const {width, height, duration, size, bitRate} = await this.FileHandler.getVideoMeta(`${baseRoot}${path}/${convertName}`);
 
             returnObj.userId = token.userId;
+            returnObj.uuid = token.uuid;
             returnObj.fileName = convertName;
             returnObj.fileExtenstion = extname(convertName);
             returnObj.filePath = `${path}`;

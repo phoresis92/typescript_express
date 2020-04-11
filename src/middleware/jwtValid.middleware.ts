@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import {Request, RequestHandler} from 'express';
+import {invalid} from 'moment';
 import {RedisClient} from 'redis';
 import {Container, Inject} from 'typedi';
 import {promisify} from 'util';
@@ -26,20 +27,29 @@ class JwtValid {
     }
 
     public decodeToken (): RequestHandler {
-        return async (req, res, next) => {
-            let decoded;
-            try {
-                decoded = jwt.verify(this.getTokenFromHeader(req), this.Config.jwtSecret);
-            }catch(e){
+        return async (req: Request, res, next) => {
 
+            const invalidJwt: Error = await this.jwtValidCheck(req);
+
+            if(invalidJwt){
+                res.status(401).send(new Response.fail(req, req.params, next).make({}, '401', invalidJwt.message));
+                return;
             }
-            console.log(decoded)
 
-            decoded = jwt.decode(this.getTokenFromHeader(req))
+            const decoded = await jwt.decode(this.getTokenFromHeader(req));
+            req.cookies.token = decoded;
 
-            console.log(decoded)
+            const redisGetSync = promisify(this.Redis.hgetall).bind(this.Redis);
+            const getResult = await redisGetSync(req.cookies.token.sessionId);
 
-            req.token = decoded
+            if(!getResult){
+                res.status(401).send(new Response.fail(req, req.params, next).make({}, '401', 'Logout User'));
+                // next(new ErrorResponse(401, 'Logout User', '401'));
+                return;
+            }
+
+            req.cookies.token.userId = getResult.userId;
+            req.cookies.token.refreshToken = getResult.refreshToken;
 
             next();
 
@@ -54,37 +64,7 @@ class JwtValid {
 
     }
 
-    public userIdFromUuid (): RequestHandler {
-        return async (req, res, next) => {
-
-            const redisGetSync = promisify(this.Redis.hgetall).bind(this.Redis);
-            const tokenDataObj = await redisGetSync(req.body.token.sessionId);
-
-            req.body.token.userId = tokenDataObj.userId;
-
-            next();
-
-        }
-    }
-
-    public validate (): RequestHandler {
-        return async (req, res, next) => {
-
-            const redisGetSync = promisify(this.Redis.hgetall).bind(this.Redis);
-            const refreshToken = await redisGetSync(req.body.token.sessionId);
-
-            if(!refreshToken){
-                res.status(401).send(new Response.fail(req, req.params, next).make({}, '401', 'Logout User'));
-                // next(new ErrorResponse(401, 'Logout User', '401'));
-                return;
-            }
-
-            next();
-
-        }
-    }
-
-    private getTokenFromHeader (req: Request) {
+    private getTokenFromHeader (req: Request): string {
         if (
             (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Token') ||
             (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer')
@@ -94,30 +74,19 @@ class JwtValid {
         return '';
     }
 
-}
+    private jwtValidCheck (req: Request) {
+        try {
+            jwt.verify(this.getTokenFromHeader(req), this.Config.jwtSecret);
 
-// function jwtValidMiddleware<T>(): RequestHandler {
-//     const Config: ConfigClass = Container.get('Config');
-//
-//     return jwt({
-//         secret: Config.jwtSecret, // The _secret_ to sign the JWTs
-//         requestProperty: 'body.token', // Use req.token to store the JWT
-//         getToken: getTokenFromHeader, // How to extract the JWT from the request
-//     })
-//         // .unless({path: ['/api/auth/auth']})
-//         ;
-//
-//     function getTokenFromHeader (req: Request) {
-//         if (
-//             (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Token') ||
-//             (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer')
-//         ) {
-//             return req.headers.authorization.split(' ')[1];
-//         }
-//         return null;
-//     }
-//
-// }
+            return null;
+
+        }catch(e){
+            return e;
+        }
+
+    }
+
+}
 
 export default JwtValid;
 

@@ -43,8 +43,8 @@ export default class Config {
     public mysqlUser: string = process.env.RDB_USER!;
     public mysqlPassword: string = process.env.RDB_PASSWORD!;
     public mysqlDb: string = process.env.RDB_DB!;
-    public dataString: boolean = Boolean(process.env.RDB_DATA_STRING);
-    public charSet: string = process.env.RDB_CHAR_SET!;
+    public mysqlDateStrings: boolean = Boolean(process.env.RDB_DATE_STRINGS);
+    public mysqlCharSet: string = process.env.RDB_CHAR_SET!;
 
     /**
      * Your favorite port

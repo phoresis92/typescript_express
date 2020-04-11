@@ -260,4 +260,3 @@ exports.getConnTransaction = function () {
         }
     })
 }
-

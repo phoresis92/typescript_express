@@ -50,7 +50,6 @@ class FileController implements Controller {
 
             .post(`/file/img`
                 , this.JwtValid.decodeToken()
-                , this.JwtValid.userIdFromUuid()
                 , this.uploads.fields(fileParam)
                 , new middleware.defaultValue()
                       .setDefault0(['thumbWidth', 'thumbHeight', 'encodeFps'])
@@ -103,15 +102,10 @@ class FileController implements Controller {
 
     private uploadImages = async (request: Request, response: Response, next: NextFunction) => {
         try {
-
-
-
-            console.log(request.body.token);
-            // console.log(response.token);
-
             const FileService: FileServiceClass = Container.get(FileServiceClass);
-            let responseObj: FileResponseClass = await FileService.uploadImageService(request.body.DtoClass, request.body.token);
+            let responseObj: FileResponseClass = await FileService.uploadImageService(request.body.DtoClass, request.cookies.token);
 
+            delete responseObj.userId;
             delete request.body.DtoClass;
             response.send(new ResponseClass.success(request, request.params, next).make(responseObj, responseObj.code));
 

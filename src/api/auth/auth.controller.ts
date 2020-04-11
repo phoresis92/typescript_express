@@ -1,4 +1,4 @@
-import * as express from 'index.d.ts';
+import * as express from 'express';
 import moment from 'moment';
 import {Container, Inject} from 'typedi';
 
@@ -10,8 +10,6 @@ import Controller from '../../interfaces/controller.interface';
 import JwtValidClass from '../../middleware/jwtValid.middleware';
 
 import HttpException from '../../exceptions/HttpException';
-
-import {celebrate, Joi} from 'celebrate';
 
 import AuthServiceClass from './auth.service';
 
@@ -46,17 +44,14 @@ class AuthController implements Controller {
 
             .delete(`/auth/logout`
                 , this.JwtValid.decodeToken()
-                , this.JwtValid.validate()
                 , this.logoutCtrl)
 
             .post(`/auth/valid`
                 , this.JwtValid.decodeToken()
-                , this.JwtValid.validate()
                 , this.validToken)
 
             .put(`/auth/refresh`
                 , this.JwtValid.decodeToken()
-                , this.JwtValid.validate()
                 , this.refreshToken);
 
     }
@@ -98,7 +93,7 @@ class AuthController implements Controller {
     private logoutCtrl = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
         try {
             const AuthService: AuthServiceClass = Container.get(AuthServiceClass);
-            let result = await AuthService.logoutService(request.body.token);
+            let result = await AuthService.logoutService(request.cookies.token);
 
             response.send(new Response.success(request, request.params, next).make({}, '01', 'Success Logout'));
         } catch (e) {
@@ -114,11 +109,12 @@ class AuthController implements Controller {
 
     private validToken = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
         try {
+            request.cookies.token.iat_format = moment.unix(request.cookies.token.iat).format('YYYY-MM-DD HH:mm:ss');
+            request.cookies.token.exp_format = moment.unix(request.cookies.token.exp).format('YYYY-MM-DD HH:mm:ss');
 
-            request.body.token.iat_format = moment.unix(request.body.token.iat).format('YYYY-MM-DD HH:mm:ss');
-            request.body.token.exp_format = moment.unix(request.body.token.exp).format('YYYY-MM-DD HH:mm:ss');
-
-            response.send(new Response.success(request, request.params, next).make({token: request.body.token}, '01'));
+            delete request.cookies.token.userId;
+            delete request.cookies.token.refreshToken;
+            response.send(new Response.success(request, request.params, next).make({token: request.cookies.token}, '01'));
         } catch (e) {
             if (e.errorCode) {
                 response.status(e.status).send(new Response.fail(request, request.params, next).make({}, e.errorCode, e.message));
@@ -133,8 +129,7 @@ class AuthController implements Controller {
     private refreshToken = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
         try {
             const AuthService: AuthServiceClass = Container.get(AuthServiceClass);
-            let accessToken = await AuthService.refreshTokenService(request.body.token, request.headers.authorization);
-
+            let accessToken = await AuthService.refreshTokenService(request.cookies.token, request);
 
             response.send(new Response.success(request, request.params, next).make({accessToken}, '01'));
         } catch (e) {

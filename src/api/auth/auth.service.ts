@@ -1,5 +1,6 @@
 import argon2 from 'argon2';
 import {createHash} from 'crypto';
+import {Request} from 'express';
 import moment = require('moment');
 import * as uuid from 'uuid';
 import jwt from 'jsonwebtoken';
@@ -46,7 +47,6 @@ export default class AuthService {
                     throw new ErrorResponse(400, "In NORMAL type must have password", '02');
                     return;
                 }
-                console.log()
                 const validPassword = await argon2.verify(loginData.password, SigninDto.password);
                 if (!validPassword) {
                     throw new ErrorResponse(401, "password mismatch", '02');
@@ -113,10 +113,14 @@ export default class AuthService {
         /** Token **/
         {
             const accessToken: string = this.generateToken({
-                                                               uuid: userData.uuid.toString(),
-                                                               sessionId: sessionData.session_id
-                                                           }, '20m');
+                uuid: userData.uuid.toString(),
+                sessionId: sessionData.session_id
+            }, '20m');
             const refreshToken: string = this.generateToken({sessionId: sessionData.session_id}, '1w');
+
+            // const hmsetSync = promisify(this.Redis.hmset).bind(this.Redis);
+            // const expireSync = promisify(this.Redis.expire).bind(this.Redis);
+            // const hdelSync = promisify(this.Redis.hdel).bind(this.Redis);
 
             const hmsetSync = promisify(this.Redis.hmset).bind(this.Redis);
             // @ts-ignore
@@ -124,9 +128,18 @@ export default class AuthService {
                 refreshToken: refreshToken,
                 userId: loginData.user_id
             });
-            if (hmsetResult !== 'OK') {
+
+            const expireSync = promisify(this.Redis.expire).bind(this.Redis);
+            let expireResult = await expireSync(sessionData.session_id, 60 * 60 * 24 * 7);
+
+            if(hmsetResult !== 'OK' || expireResult !== 1){
+                const hdelSync = promisify(this.Redis.hdel).bind(this.Redis);
+                // @ts-ignore
+                await hdelSync(sessionData.session_id, 'userId', 'refreshToken');
+
                 throw new ErrorResponse(500, '[REDIS] Set refreshToken Error', '07');
                 return;
+
             }
 
             // if (data.osType === 'WEB') {
@@ -167,7 +180,7 @@ export default class AuthService {
 
         // const userId = createHash('sha256').update(SignupDto.loginId + moment().format('x').slice(4, 10)).digest('hex').substring(0,49);
 
-        const {uuid, user_id} = await this.AuthDAO.signupUser(SignupDto.joinType, SignupDto.nickName, SignupDto.loginId, SignupDto.password, SignupDto.agreeUse, SignupDto.agreePersonalInfo);
+        const {uuid, user_id} = await this.AuthDAO.signupUser(SignupDto);
 
         return {uuid, user_id};
 
@@ -181,50 +194,35 @@ export default class AuthService {
             return;
         }
 
-        // const redisDelSync = promisify(this.Redis.del).bind(this.Redis);
-        // const redisDelResult = await redisDelSync(token.user_id);
-        this.Redis.hdel(token.sessionId, 'refresh_token', 'user_id', (err, value)=>{
-            if(err){
-                throw new ErrorResponse(500, '[Redis] Delete token', '02');
-                return;
-            }
+        const hdelSync = promisify(this.Redis.hdel).bind(this.Redis);
+        // @ts-ignore
+        const delResult = await hdelSync(token.sessionId, 'userId', 'refreshToken');
 
-            return true;
-        });
+        return true;
 
-        // this.Redis.del(token.user_id, (err, value) => {
+        // this.Redis.hdel(token.sessionId, 'refresh_token', 'user_id', (err, value)=>{
         //     if(err){
         //         throw new ErrorResponse(500, '[Redis] Delete token', '02');
         //         return;
         //     }
         //
         //     return true;
-        //
         // });
 
     };
 
-    public refreshTokenService = async (token: TokenInterface, authorization: any): Promise<any> => {
+    public refreshTokenService = async (token: any, req: Request): Promise<any> => {
 
-        const redisGetSync = promisify(this.Redis.hgetall).bind(this.Redis);
-        const redisValue = await redisGetSync(token.sessionId);
+        const userRefreshToken: string = this.getTokenFromHeader(req);
 
-        const userRefreshToken = authorization.split(' ')[1];
-
-        if(!redisValue){
-            throw new ErrorResponse(401, 'Logout User', '01');
-            return;
-        }
-
-        const redisRefreshToken = redisValue.refresh_token;
-        const redisUserId = redisValue.user_id;
-
-        if(userRefreshToken !== redisRefreshToken){
+        if(userRefreshToken !== token.refreshToken){
             throw new ErrorResponse(403, 'Refresh Token mismatch', '02');
             return;
         }
 
-        const accessToken: string = this.generateToken({user_id: redisUserId, session_id: token.sessionId}, '20m');
+        const userData = await this.AuthDAO.getUserByUserId(token.userId);
+
+        const accessToken: string = this.generateToken({uuid: userData.uuid.toString(), sessionId: token.sessionId}, '20m');
 
         return accessToken;
 
@@ -242,5 +240,16 @@ export default class AuthService {
         );
 
     }
+
+    private getTokenFromHeader (req: Request): string {
+        if (
+            (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Token') ||
+            (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer')
+        ) {
+            return req.headers.authorization.split(' ')[1];
+        }
+        return '';
+    }
+
 
 }
