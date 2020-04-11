@@ -8,10 +8,9 @@ import uuid, { v4 } from 'uuid';
 
 const instanceId = v4();
 
-// import ContentsController from './api/contents/contents.controller';
-// import ContentsAdminController from './api/contents.admin/contents.admin.controller';
 // import VersionController from './api/version/version.controller';
 import AuthController from './api/auth/auth.controller';
+import HabitController from './api/habit/habit.controller';
 
 import loaders from './loaders';
 
@@ -19,10 +18,9 @@ import loaders from './loaders';
     await loaders();
     const app = new App(
         [
-            // new ContentsController(),
-            // new ContentsAdminController(),
             // new VersionController(),
             new AuthController(),
+            new HabitController(),
         ],
     );
 

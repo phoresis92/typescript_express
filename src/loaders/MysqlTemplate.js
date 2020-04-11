@@ -231,7 +231,7 @@ exports.commit = function (query, next) {
 
 };
 
-exports.getConnTransaction = function () {
+exports.getConn = function () {
     return new Promise((resolve, reject) => {
         try {
             pool.getConnection(async (err, conn) => {

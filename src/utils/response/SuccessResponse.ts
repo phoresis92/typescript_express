@@ -13,7 +13,7 @@ class SuccessResponse implements ResponseInterface{
     // public next: NextFunction;
     public resultData: any;
     public responseCode: string;
-    private message: string;
+    private message: string | undefined;
 
     constructor(public request: Request, public params: object, public next: NextFunction){};
 
@@ -22,9 +22,9 @@ class SuccessResponse implements ResponseInterface{
     };
 
     public make(resultData: any, responseCode: string, message?: string){
-        if(message === undefined){
-            message = '';
-        }
+        // if(message === undefined){
+        //     message = '';
+        // }
         this.resultData = resultData;
         this.responseCode = responseCode;
         this.message = message;

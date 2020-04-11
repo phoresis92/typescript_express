@@ -73,6 +73,12 @@ export default class Config {
     public redisHost: string = process.env.REDIS_HOST!;
 
     /**
+     * Paging Config
+     */
+    public itemPerPageCnt: number = parseInt(process.env.ITME_PER_PAGE_COUNT!) | 10;
+    public pageCount: number = parseInt(process.env.PAGE_COUNT!) | 10;
+
+    /**
      * That long string from mlab
      */
     // databaseURL: process.env.MONGODB_URI,

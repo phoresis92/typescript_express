@@ -181,7 +181,7 @@ export default class AuthDAO{
         const uuid = this.Utils.makeUserId();
         let user_id: number;
 
-        const [conn, querySync] = await Mysql.getConnTransaction();
+        const [conn, querySync] = await Mysql.getConn();
 
         try{
 
