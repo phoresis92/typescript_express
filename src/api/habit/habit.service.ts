@@ -126,51 +126,88 @@ export default class HabitService {
 
     public updateRoomService = async (HabitDto: HabitDtoClass, token: TokenInterface): Promise<any> => {
 
-        /** Start,End Date Valid Check **/
-        {
-            if(!HabitDto.validDate()){
-                throw new ErrorResponse(400, 'Invalid date period', '01');
-                return;
-            };
-        }
+            /** Start,End Date Valid Check **/
+            {
+                if(!HabitDto.validDate()){
+                    throw new ErrorResponse(400, 'Invalid date period', '01');
+                    return;
+                };
+            }
 
-        /** Category Valid Check **/
-        {
-            const categoryData = await this.HabitDAO.categoryValidCheck(HabitDto.habitCategory);
-            if(!categoryData){
-                throw new ErrorResponse(400, 'Invalid categorySeq', '02');
-                return;
+            /** Category Valid Check **/
+            {
+                const categoryData = await this.HabitDAO.categoryValidCheck(HabitDto.habitCategory);
+                if(!categoryData){
+                    throw new ErrorResponse(400, 'Invalid categorySeq', '02');
+                    return;
+                }
             }
-        }
 
-        /** Access Valid Check **/
-        let habitData, joinData;
-        {
-            [habitData, joinData] = await this.HabitDAO.getRoomBySeq(HabitDto.habitSeq, token);
-            if(!habitData){
-                throw new ErrorResponse(400, 'Nonexistent habitSeq', '03');
-                return;
+            /** Access Valid Check **/
+            let habitData, joinData;
+            {
+                [habitData, joinData] = await this.HabitDAO.getRoomBySeq(HabitDto.habitSeq, token);
+                if(!habitData){
+                    throw new ErrorResponse(400, 'Nonexistent habitSeq', '03');
+                    return;
+                }
+                if(habitData.habit_status !== 50 && habitData.habit_status !== 30){
+                    throw new ErrorResponse(400, 'Bad Status Habit', '04');
+                    return;
+                }
+                if(!joinData || joinData.join_status !== 100){
+                    throw new ErrorResponse(400, 'Your Not Join In Habit', '05');
+                    return;
+                }
+                if(joinData.is_leader !== 50){
+                    throw new ErrorResponse(400, 'Your Not HeadLeader', '06');
+                    return;
+                }
             }
-            if(habitData.habit_status !== 50){
-                throw new ErrorResponse(400, 'Bad Status Habit', '04');
-                return;
-            }
-            if(!joinData || joinData.join_status !== 100){
-                throw new ErrorResponse(400, 'Your Not Join In Habit', '05');
-                return;
-            }
-            if(joinData.is_leader !== 50){
-                throw new ErrorResponse(400, 'Your Not HeadLeader', '06');
-                return;
-            }
-        }
 
-        /** Insert Room **/
-        {
-            //TODO when already started habit
-            habitData.start_date
-            return await this.HabitDAO.updateRoom(HabitDto, token);
-        }
+            /** Update Room **/
+            {
+                //TODO when already started habit
+                // habitData.start_date
+                console.log('before dao')
+                return await this.HabitDAO.updateRoom(HabitDto, token);
+                console.log('after dao')
+            }
+
+    };
+
+    public deleteRoomService = async (habitSeq: number, token: TokenInterface): Promise<any> => {
+
+            /** Access Valid Check **/
+            let habitData, joinData;
+            {
+                [habitData, joinData] = await this.HabitDAO.getRoomBySeq(habitSeq, token);
+                if(!habitData){
+                    throw new ErrorResponse(400, 'Nonexistent habitSeq', '03');
+                    return;
+                }
+                if(habitData.habit_status !== 50 && habitData.habit_status !== 30){
+                    throw new ErrorResponse(400, 'Bad Status Habit', '04');
+                    return;
+                }
+                if(!joinData || joinData.join_status !== 100){
+                    throw new ErrorResponse(400, 'Your Not Join In Habit', '05');
+                    return;
+                }
+                if(joinData.is_leader !== 50){
+                    throw new ErrorResponse(400, 'Your Not HeadLeader', '06');
+                    return;
+                }
+            }
+
+            /** Update Room **/
+            {
+                //TODO when already started habit
+                // habitData.start_date
+                console.log('before dao')
+                // return await this.HabitDAO.updateRoom(HabitDto, token);
+                console.log('after dao')
+            }
 
     };
 

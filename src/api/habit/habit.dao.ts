@@ -5,6 +5,7 @@ import mysql from 'mysql';
 import TokenInterface from '../../interfaces/token.interface';
 
 import Mysql from '../../loaders/MysqlTemplate';
+import FileHandlerClass from '../../utils/file/fileHandler.class';
 import ErrorResponse from '../../utils/response/ErrorResponse';
 
 import UtilsClass from '../../utils/utils';
@@ -19,6 +20,8 @@ export default class AuthDAO{
     private Utils: UtilsClass;
     @Inject()
     private Config: ConfigClass;
+    @Inject()
+    private FileHandle: FileHandlerClass;
 
     constructor(){}
 
@@ -243,11 +246,12 @@ export default class AuthDAO{
         try{
 
             let query = `
-                UPDATE INTO t_nf_habit
+                UPDATE t_nf_habit
                 SET ?
+                WHERE habit_seq = ${mysql.escape(HabitDto.habitSeq)}
             `;
 
-            const insertHabit = await querySync(query, {
+            const updateHabit = await querySync(query, {
                 habit_category_seq: HabitDto.habitCategory,
                 habit_title: HabitDto.habitTitle,
                 habit_goal: HabitDto.habitGoal,
@@ -263,32 +267,10 @@ export default class AuthDAO{
                 cert_method: HabitDto.certMethod,
             });
 
-            // console.log(insertHabit)
-            if(insertHabit.affectedRows === 0){
+            console.log('updateHabit', updateHabit)
+            if(updateHabit.affectedRows === 0){
                 conn.rollback();
-                throw new ErrorResponse(500, '[DB] Insert Habit Error', '500');
-                return;
-            }
-
-            // ==========================================================================================
-
-            query = `
-                INSERT INTO t_nf_habit_join
-                SET ?
-            `;
-
-            const insertJoin = await querySync(query, {
-                user_id: token.userId,
-                uuid: token.uuid,
-                habit_seq: insertHabit.insertId,
-                join_status: 100,
-                is_leader: 50,
-            });
-
-            // console.log(insertJoin)
-            if(insertJoin.affectedRows === 0){
-                conn.rollback();
-                throw new ErrorResponse(500, '[DB] Insert Join Error', '500');
+                throw new ErrorResponse(500, '[DB] Update Habit Error', '500');
                 return;
             }
 
@@ -302,8 +284,36 @@ export default class AuthDAO{
             `;
 
             if(HabitDto.sampleFileSeq !== 0){
-                const updateSampleFile = await querySync(query, ['HABIT_SAMPLE', insertHabit.insertId, HabitDto.sampleFileSeq]);
 
+                // Delete exist file
+                const existSampleFileList = await querySync(`
+                    SELECT * 
+                    FROM t_nf_file
+                    WHERE target_type = 'HABIT_SAMPLE'
+                        AND target_key = ? 
+                `, [HabitDto.habitSeq]);
+
+                console.log('existSampleFileList', existSampleFileList)
+                if(existSampleFileList.length !== 0){
+                    for(let file of existSampleFileList){
+                        await this.FileHandle.deleteFile(file.file_path, file.file_name);
+                        await this.FileHandle.deleteFile(file.thumb_path, file.thumb_name);
+                    }
+                    console.log('HabitDto.habitSeq', HabitDto.habitSeq)
+
+                    let delteSampleFile = await querySync(`
+                        DELETE  
+                        FROM t_nf_file
+                        WHERE file_seq IN (?) 
+                    `, [existSampleFileList.map((val: any) => val.file_seq)]);
+
+                    console.log(delteSampleFile)
+                }
+
+                // Update temp file
+                const updateSampleFile = await querySync(query, ['HABIT_SAMPLE', HabitDto.habitSeq, HabitDto.sampleFileSeq]);
+
+                console.log('updateSampleFile', updateSampleFile)
                 if(updateSampleFile.affectedRows === 0){
                     conn.rollback();
                     throw new ErrorResponse(500, '[DB] Update Sample File', '500');
@@ -313,8 +323,32 @@ export default class AuthDAO{
             }
 
             if(HabitDto.profileFileSeq !== 0){
-                const updateProfileFile = await querySync(query, ['HABIT', insertHabit.insertId, HabitDto.profileFileSeq]);
 
+                // Delete exist file
+                const existProfileFileList = await querySync(`
+                    SELECT * 
+                    FROM t_nf_file
+                    WHERE target_type = 'HABIT'
+                        AND target_key = ? 
+                `, [HabitDto.habitSeq]);
+
+                console.log('existProfileFileList', existProfileFileList)
+                if(existProfileFileList.length !== 0){
+                    for(let file of existProfileFileList){
+                        await this.FileHandle.deleteFile(file.file_path, file.file_name);
+                        await this.FileHandle.deleteFile(file.thumb_path, file.thumb_name);
+                    }
+                    await querySync(`
+                        DELETE  
+                        FROM t_nf_file
+                        WHERE file_seq IN (?) 
+                    `, [existProfileFileList.map((val: any) => val.file_seq)]);
+                }
+
+                // Update temp file
+                const updateProfileFile = await querySync(query, ['HABIT', HabitDto.habitSeq, HabitDto.profileFileSeq]);
+
+                console.log('updateProfileFile', updateProfileFile)
                 if(updateProfileFile.affectedRows === 0){
                     conn.rollback();
                     throw new ErrorResponse(500, '[DB] Update Profile File', '500');

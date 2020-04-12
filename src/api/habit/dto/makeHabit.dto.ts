@@ -32,6 +32,7 @@ import moment from 'moment';
 
 class MakeHabitRoomDto {
     @IsNumber()
+    @Min(1)
     public habitSeq: number;
 
     @IsNotEmpty()

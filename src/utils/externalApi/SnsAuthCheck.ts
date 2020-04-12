@@ -7,13 +7,13 @@ import fbAdmin from 'firebase-admin';
 import ConfigClass from '../../config/config.dto';
 import ErrorResponse from '../response/ErrorResponse';
 
-let serviceAccount = 'TEMP'; //require('../../../APIKEY_FIREBASE_ACCOUNT/allthatkorea-5bfcd-a2859e897ba8');
-let APIKEY_FIREBASE_PROJECT_NAME = 'TEMP'; //require('../../../APIKEY_FIREBASE_ACCOUNT/allthatkorea-5bfcd-a2859e897ba8');
+let serviceAccount = require('../../../APIKEY_FIREBASE_ACCOUNT/try-v3-cb817-firebase-adminsdk-1yug8-cc33d70572');
+let APIKEY_FIREBASE_PROJECT_NAME = 'try-v3-cb817';
 
-// fbAdmin.initializeApp({
-//     credential: fbAdmin.credential.cert(serviceAccount),
-//     databaseURL: `https://${APIKEY_FIREBASE_PROJECT_NAME}.firebaseio.com`
-// });
+fbAdmin.initializeApp({
+    credential: fbAdmin.credential.cert(serviceAccount),
+    databaseURL: `https://${APIKEY_FIREBASE_PROJECT_NAME}.firebaseio.com`
+});
 
 
 type optionType = {method: string, url: string, headers?: {Authorization: string}}

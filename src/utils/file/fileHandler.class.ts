@@ -58,8 +58,8 @@ export default class FileHandlerClass{
                     if(err) throw err;
                     resolve(true);
                 });
-            }else{
-                reject(false);
+            } else {
+                resolve(false);
             }
 
         })

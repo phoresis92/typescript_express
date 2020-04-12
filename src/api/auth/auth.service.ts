@@ -167,13 +167,13 @@ export default class AuthService {
         }
 
         /** ⚠️SNS token check **/
-        /*if (SignupDto.joinType !== 'NORMAL') {
+        if (SignupDto.joinType !== 'NORMAL') {
             const validToken = await new SnsAuthCheck(SignupDto.joinType).authorizeToken(SignupDto.loginId, SignupDto.password);
             if (!validToken) {
                 throw new ErrorResponse(401, `Invalid SNS token`, '02');
                 return;
             }
-        }*/
+        }
 
         /** ⚠️Auth code check **/
         {}

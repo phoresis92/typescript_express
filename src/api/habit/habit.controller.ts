@@ -61,17 +61,22 @@ class HabitController implements Controller {
                 , this.roomDetailCtrl);
 
         this.router
-            .put(`/habit/:seq`
+            .put(`/habit`
                 , this.JwtValid.decodeToken()
                 , new middleware.defaultValue()
                      .setDate(['startDate', 'endDate'])
-                     .setNumber(['habitCategory', 'maxJoinCnt'])
-                     .setDefault0(['habitSeq', 'profileFileSeq', 'sampleFileSeq'])
+                     .setNumber(['habitCategory', 'maxJoinCnt', 'habitSeq'])
+                     .setDefault0(['profileFileSeq', 'sampleFileSeq'])
                      // .setDefault1([])
                      .makeArray(['certType', 'pictureType'])
                      .handle()
                 , middleware.validation(dto.makeHabit, false)
                 , this.updateRoomCtrl);
+
+        this.router
+            .delete(`/habit/:seq`
+                , this.JwtValid.decodeToken()
+                , this.deleteRoomCtrl);
 
         this.router
             .get(`/habit/category`
@@ -144,15 +149,10 @@ class HabitController implements Controller {
 
     private updateRoomCtrl = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
         try {
-            if(request.body.DtoClass.habitSeq === 0){
-                throw new ErrorResponse(400, 'habitSeq is empty', '400');
-                return;
-            }
-
             const HabitService: HabitServiceClass = Container.get(HabitServiceClass);
             let result = await HabitService.updateRoomService(request.body.DtoClass, request.cookies.token);
 
-            response.send(new Response.success(request, request.params, next).make({}, '01', 'Success Sign In'));
+            response.send(new Response.success(request, request.params, next).make({}, '01'));
         } catch (e) {
             if (e.errorCode) {
                 response.status(e.status).send(new Response.fail(request, request.params, next).make({}, e.errorCode, e.message));
@@ -163,6 +163,30 @@ class HabitController implements Controller {
         }
 
     };
+
+    private deleteRoomCtrl = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
+        try {
+            const habitSeq: number = parseInt(request.params.seq);
+            if (isNaN(habitSeq)) {
+                throw new ErrorResponse(400, '@isNaN habitSeq', '400');
+            }
+
+            const HabitService: HabitServiceClass = Container.get(HabitServiceClass);
+            let result = await HabitService.deleteRoomService(habitSeq, request.cookies.token);
+
+            response.send(new Response.success(request, request.params, next).make({}, '01'));
+        } catch (e) {
+            if (e.errorCode) {
+                response.status(e.status).send(new Response.fail(request, request.params, next).make({}, e.errorCode, e.message));
+                return;
+            }
+
+            next(new HttpException(e.status, e.message, request.params));
+        }
+
+    };
+
+    // ========================================================================================================================
 
     private getCategoryCtrl = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
         try {
