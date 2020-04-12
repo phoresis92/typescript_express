@@ -53,8 +53,8 @@ export default class FileHandlerClass{
 
     public deleteFile(path: string, fileName: string){
         return new Promise((resolve, reject)=>{
-            if(fs.existsSync(`${path}/${fileName}`)) {
-                fs.unlink(`${path}/${fileName}`, (err)=>{
+            if(fs.existsSync(`${this.Config.basePath}${this.Config.uploadPath}${path}/${fileName}`)) {
+                fs.unlink(`${this.Config.basePath}${this.Config.uploadPath}${path}/${fileName}`, (err)=>{
                     if(err) throw err;
                     resolve(true);
                 });

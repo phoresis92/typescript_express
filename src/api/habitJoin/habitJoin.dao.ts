@@ -14,7 +14,7 @@ import HabitListDto from './dto/habitList.dto';
 import HabitDtoClass from './dto/makeHabit.dto';
 
 @Service()
-export default class AuthDAO{
+export default class HabitJoinDAO{
 
     @Inject('utils')
     private Utils: UtilsClass;
@@ -25,32 +25,21 @@ export default class AuthDAO{
 
     constructor(){}
 
-    public async insertRoom (HabitDto: HabitDtoClass, token: TokenInterface): Promise<any> {
+    public async insertHabitJoin (habitSeq: number, token: TokenInterface): Promise<any> {
 
         const [conn, querySync] = await Mysql.getConn();
 
         try{
 
             let query = `
-                INSERT INTO t_nf_habit
-                SET ?
+                INSERT INTO t_nf_habit_join (user_id, uuid, habit_seq)
+                VALUES (?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                    join_status = 0
+                    , is_leader = 0
             `;
 
-            const insertHabit = await querySync(query, {
-                habit_category_seq: HabitDto.habitCategory,
-                habit_title: HabitDto.habitTitle,
-                habit_goal: HabitDto.habitGoal,
-                frequency: HabitDto.frequency,
-                period: HabitDto.period,
-                start_date: HabitDto.startDate,
-                end_date: HabitDto.endDate,
-                cert_start: HabitDto.certStart,
-                cert_end: HabitDto.certEnd,
-                max_join_cnt: HabitDto.maxJoinCnt,
-                cert_type: HabitDto.certType.join(','),
-                picture_type: HabitDto.pictureType.join(','),
-                cert_method: HabitDto.certMethod,
-            });
+            const insertHabit = await querySync(query, [token.userId, token.uuid, habitSeq]);
 
             // console.log(insertHabit)
             if(insertHabit.affectedRows === 0){
@@ -149,13 +138,10 @@ export default class AuthDAO{
                 FROM (
                     SELECT *
                     FROM t_nf_habit h
-                    WHERE h.habit_status = 50
+                    WHERE h.habit_status = 30
                         AND h.start_date > NOW()
                         ${HabitListDto.habitCategory !== 0 ? `
-                        AND h.habit_category_seq = ${mysql.escape(HabitListDto.habitCategory)}
-                        ` : ``}
-                        ${HabitListDto.keyword !== '' ? `
-                        AND h.habit_title LIKE ${mysql.escape('%' + HabitListDto.keyword + '%')}
+                        AND h.habit_category_seq = ${HabitListDto.habitCategory}
                         ` : ``}
                     ) h
                 INNER JOIN t_nf_habit_category hc ON hc.habit_category_seq = h.habit_category_seq

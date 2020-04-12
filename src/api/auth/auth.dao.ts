@@ -40,7 +40,7 @@ export default class AuthDAO{
 
     }
 
-    public async getUserByUserId (userId: string): Promise<any> {
+    public async getUserByUserId (userId: number): Promise<any> {
 
         let query =`
             SELECT *
@@ -165,7 +165,7 @@ export default class AuthDAO{
 
     }
 
-    public async signupUser (SignupDto: SignupDtoClass/*joinType: string, nickName: string, loginId: string, password: string, agreeUse: number, agreePersonalInfo: number*/): Promise<{uuid: any, user_id: number}> {
+    public async signupUser (SignupDto: SignupDtoClass/*joinType: string, nickName: string, loginId: string, password: string, agreeUse: number, agreePersonalInfo: number*/): Promise<{uuid: any, userId: number}> {
 
         let hashedPassword: string | null;
 
@@ -179,7 +179,7 @@ export default class AuthDAO{
         }
 
         const uuid = this.Utils.makeUserId();
-        let user_id: number;
+        let userId: number;
 
         const [conn, querySync] = await Mysql.getConn();
 
@@ -189,20 +189,20 @@ export default class AuthDAO{
                 INSERT t_nf_user
                 SET uuid = ?
                     , user_type = 'USER'
-                    , nick_name = ?
                     , agree_use = ?
                     , agree_use_date = ${SignupDto.agreeUse === 1 ? `NOW()` : `NULL`} 
                     , agree_personal_info = ?
                     , agree_personal_info_date = ${SignupDto.agreePersonalInfo === 1 ? `NOW()` : `NULL`} 
             `;
+                    // , nick_name = ?
 
-            const insertUserResult = await querySync(insertUser, [uuid, SignupDto.nickName, SignupDto.agreeUse, SignupDto.agreePersonalInfo]);
+            const insertUserResult = await querySync(insertUser, [uuid/*, SignupDto.nickName*/, SignupDto.agreeUse, SignupDto.agreePersonalInfo]);
             if(insertUserResult.affectedRows === 0){
                 conn.rollback();
                 throw new Error('[Error] Insert User');
             }
 
-            user_id = insertUserResult.insertId;
+            userId = insertUserResult.insertId;
 
             let insertUserLogin = `
                 INSERT t_nf_user_login
@@ -217,28 +217,29 @@ export default class AuthDAO{
                 throw new Error('[Error] Insert UserLogin');
             }
 
-            const updateFileResult = await querySync(`
-                UPDATE t_nf_file
-                SET target_type = 'USER'
-                    , target_key = ?
-                WHERE file_seq = ?
-            `, [uuid, SignupDto.fileSeq]);
-
-            if(updateFileResult.affectedRows === 0){
-                conn.rollback;
-                throw new Error('[Error] Update File Temp');
-            }
+            // const updateFileResult = await querySync(`
+            //     UPDATE t_nf_file
+            //     SET target_type = 'USER'
+            //         , target_key = ?
+            //     WHERE file_seq = ?
+            // `, [uuid, SignupDto.fileSeq]);
+            //
+            // if(updateFileResult.affectedRows === 0){
+            //     conn.rollback;
+            //     throw new Error('[Error] Update File Temp');
+            // }
 
             await conn.commit();
 
         }catch(e){
+            console.log(e)
             await conn.rollback();
             throw new ErrorResponse(500, e.message, '500');
         }finally{
             await conn.release();
         }
 
-        return {uuid, user_id};
+        return {uuid, userId};
 
     }
 

@@ -180,9 +180,9 @@ export default class AuthService {
 
         // const userId = createHash('sha256').update(SignupDto.loginId + moment().format('x').slice(4, 10)).digest('hex').substring(0,49);
 
-        const {uuid, user_id} = await this.AuthDAO.signupUser(SignupDto);
+        const {uuid, userId} = await this.AuthDAO.signupUser(SignupDto);
 
-        return {uuid, user_id};
+        return {uuid, userId};
 
     };
 

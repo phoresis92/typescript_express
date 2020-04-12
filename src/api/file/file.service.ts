@@ -44,11 +44,11 @@ export default class FileService {
         let path: string = `/${FileDto.filePath}`;
         let fileName: string = '';
         const originName: string = FileDto.fileData.originalname;
-        const ext: string = extname(originName);
+        const ext: string = extname(originName).toLowerCase();
 
 
         if (!this.allowImageExt.includes(ext)) {
-            throw new Error('@Ext Not Allowed');
+            throw new ErrorResponse(400, '@Ext Not Allowed', '02');
         }
 
         if (FileDto.useDateFolder === 1) {
@@ -145,7 +145,7 @@ export default class FileService {
             let path: string = `/${FileDto.filePath}`;
             let fileName: string = '';
             const originName: string = FileDto.fileData.originalname;
-            const ext: string = extname(originName);
+            const ext: string = extname(originName).toLowerCase();
 
             let returnObj: FileResponseClass = new FileResponseClass();
 

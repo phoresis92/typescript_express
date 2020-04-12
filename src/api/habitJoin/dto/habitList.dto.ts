@@ -33,9 +33,6 @@ class HabitListDto {
     @IsNumber()
     public habitCategory: number;
 
-    @IsString()
-    public keyword: string;
-
     @IsNotEmpty()
     @IsNumber()
     public page: number;

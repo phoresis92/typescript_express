@@ -2,19 +2,22 @@ import {Equals, Allow, IsNotEmpty, IsDefined, validate, validateOrReject, Contai
 
 class SignupDto {
     @IsNotEmpty()
+    @IsString()
     public joinType: string;
 
     @IsNotEmpty()
+    @IsString()
     public loginId: string;
 
     @IsNotEmpty()
+    @IsString()
     public password: string;
 
-    @IsString()
-    public nickName: string; // 50%
-
-    @IsNumber()
-    public fileSeq: number;
+    // @IsString()
+    // public nickName: string;
+    //
+    // @IsNumber()
+    // public fileSeq: number;
 
     @IsNumber()
     public agreeUse: number;

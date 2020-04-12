@@ -1,8 +1,4 @@
-import argon2 from 'argon2';
-import {createHash} from 'crypto';
-import {Request} from 'express';
 import moment = require('moment');
-import redis, {RedisClient, print} from 'redis';
 import {Container, Service, Inject} from 'typedi';
 import {promisify} from 'util';
 import TokenInterface from '../../interfaces/token.interface';
@@ -10,17 +6,18 @@ import TokenInterface from '../../interfaces/token.interface';
 import UtilsClass from '../../utils/utils';
 
 import ConfigClass from '../../config/config.dto';
-import HabitListDto from './dto/habitList.dto';
-import HabitDAOClass from './habit.dao';
-import HabitDtoClass from './dto/makeHabit.dto';
+import HabitJoinDAOClass from './habitJoin.dao';
+import HabitDAOClass from '../habit/habit.dao';
 
 import ErrorResponse from "../../utils/response/ErrorResponse";
 
 @Service()
-export default class HabitService {
+export default class HabitJoinService {
 
     @Inject()
     private Config: ConfigClass;
+    @Inject()
+    private HabitJoinDAO: HabitJoinDAOClass;
     @Inject()
     private HabitDAO: HabitDAOClass;
     // @Inject('redis')
@@ -28,28 +25,37 @@ export default class HabitService {
 
     constructor() {};
 
-    public makeRoomService = async (HabitDto: HabitDtoClass, token: TokenInterface): Promise<any> => {
+    public habitJoinService = async (habitSeq: number, token: TokenInterface): Promise<any> => {
 
-        /** Start,End Date Valid Check **/
+        /** Exist Check **/
+        let habitData, joinData;
         {
-            if(!HabitDto.validDate()){
-                throw new ErrorResponse(400, 'Invalid date period', '01');
-                return;
-            };
+             [habitData, joinData] = await this.HabitDAO.getRoomBySeq(habitSeq, token);
+
+             if(!habitData){
+                 throw new ErrorResponse(404, 'Not Exist habitSeq', '01');
+                 return;
+             }
+             if(habitData.habit_status !== 50){
+                 throw new ErrorResponse(400, 'Bad Status', '02');
+                 return;
+             }
+
+             if(joinData){
+                 if(joinData.join_status === 100){
+                     throw new ErrorResponse(400, 'Already Joined', '03');
+                     return;
+                 }
+                 if(joinData.join_status === 0){
+                     throw new ErrorResponse(400, 'Waiting for Allow', '04');
+                     return;
+                 }
+             }
         }
 
-        /** Category Valid Check **/
+        /** Insert Habit Join **/
         {
-            const categoryData = await this.HabitDAO.categoryValidCheck(HabitDto.habitCategory);
-            if(!categoryData){
-                throw new ErrorResponse(400, 'Invalid categorySeq', '02');
-                return;
-            }
-        }
-
-        /** Insert Room **/
-        {
-            return await this.HabitDAO.insertRoom(HabitDto, token);
+            return await this.HabitJoinDAO.insertHabitJoin(HabitDto, token);
         }
 
     };
