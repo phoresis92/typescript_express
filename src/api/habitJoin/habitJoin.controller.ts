@@ -4,6 +4,7 @@ import {Container, Inject} from 'typedi';
 import ConfigClass from '../../config/config.dto';
 
 import middleware from '../../middleware';
+import defaultValueMiddleware from '../../middleware/defaultValue.middleware';
 import ErrorResponse from '../../utils/response/ErrorResponse';
 import dto from './dto';
 import Response from '../../utils/response';
@@ -35,45 +36,46 @@ class HabitJoinController implements Controller {
                 , this.habitJoinCtrl);
 
         this.router
-            .post(`/habit/list`
+            .put(`/habit/:seq/join`
                 , this.JwtValid.decodeToken()
-                , new middleware.defaultValue()
-                      // .setDate(['startDate', 'endDate'])
-                      // .setNumber([])
-                      .setDefault0(['habitCategory'])
-                      .setDefault1(['page'])
-                      // .makeArray(['certType', 'pictureType'])
-                      .handle()
-                , middleware.validation(dto.habitList, false)
-                , this.roomListCtrl);
+                , this.habitJoinCancelCtrl);
 
         this.router
-            .get(`/habit/:seq`
+            .delete(`/habit/:seq/join`
                 , this.JwtValid.decodeToken()
-                , this.roomDetailCtrl);
+                , this.withdrawHabitCtrl);
+
+        // ===================================================
 
         this.router
-            .put(`/habit`
-                , this.JwtValid.decodeToken()
-                , new middleware.defaultValue()
-                     .setDate(['startDate', 'endDate'])
-                     .setNumber(['habitCategory', 'maxJoinCnt', 'habitSeq'])
-                     .setDefault0(['profileFileSeq', 'sampleFileSeq'])
-                     // .setDefault1([])
-                     .makeArray(['certType', 'pictureType'])
+            .get(`/habit/:seq/member`
+                 , new defaultValueMiddleware()
+                     .setDefault1(['listType', 'page'])
                      .handle()
-                , middleware.validation(dto.makeHabit, false)
-                , this.updateRoomCtrl);
+                , this.JwtValid.decodeToken()
+                , this.memberListCtrl);
 
         this.router
-            .delete(`/habit/:seq`
+            .put(`/habit/member`
                 , this.JwtValid.decodeToken()
-                , this.deleteRoomCtrl);
+                , new defaultValueMiddleware()
+                     .setNumber(['habitSeq'])
+                     .handle()
+                , middleware.validation(dto.memberStatus, false)
+                , this.memberStatusCtrl);
 
-        this.router
-            .get(`/habit/category`
-                , this.JwtValid.decodeToken()
-                , this.getCategoryCtrl);
+        // this.router
+        //     .post(`/habit/list`
+        //         , this.JwtValid.decodeToken()
+        //         , new middleware.defaultValue()
+        //               // .setDate(['startDate', 'endDate'])
+        //               // .setNumber([])
+        //               .setDefault0(['habitCategory'])
+        //               .setDefault1(['page'])
+        //               // .makeArray(['certType', 'pictureType'])
+        //               .handle()
+        //         , middleware.validation(dto.habitList, false)
+        //         , this.roomListCtrl);
 
     }
 
@@ -85,9 +87,9 @@ class HabitJoinController implements Controller {
             }
 
             const HabitJoinService: HabitJoinServiceClass = Container.get(HabitJoinServiceClass);
-            let result = await HabitJoinService.habitJoinService(request.body.DtoClass, request.cookies.token);
+            let result = await HabitJoinService.habitJoinService(habitSeq, request.cookies.token);
 
-            response.send(new Response.success(request, request.params, next).make({}, '01', 'Success Sign In'));
+            response.send(new Response.success(request, request.params, next).make({}, '01', 'Request Join Success'));
         } catch (e) {
             if (e.errorCode) {
                 response.status(e.status).send(new Response.fail(request, request.params, next).make({}, e.errorCode, e.message));
@@ -99,40 +101,17 @@ class HabitJoinController implements Controller {
 
     };
 
-    private roomListCtrl = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
-        try {
-            const HabitService: HabitServiceClass = Container.get(HabitServiceClass);
-            let [habitList, count] = await HabitService.roomListService(request.cookies.token, request.body.DtoClass);
-
-            response.send(new Response.success(request, request.params, next).make({
-                habitList,
-                count,
-                page: request.body.DtoClass.page,
-                itemPerPageCnt: this.Config.itemPerPageCnt,
-                pageCount: this.Config.pageCount
-            }, '01'));
-        } catch (e) {
-            if (e.errorCode) {
-                response.status(e.status).send(new Response.fail(request, request.params, next).make({}, e.errorCode, e.message));
-                return;
-            }
-
-            next(new HttpException(e.status, e.message, request.params));
-        }
-
-    };
-
-    private roomDetailCtrl = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
+    private habitJoinCancelCtrl = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
         try {
             const habitSeq = parseInt(request.params.seq);
             if (isNaN(habitSeq)) {
                 throw new ErrorResponse(400, '@isNaN habitSeq', '400');
             }
 
-            const HabitService: HabitServiceClass = Container.get(HabitServiceClass);
-            let [roomData, getJoin] = await HabitService.roomDetailService(habitSeq, request.cookies.token);
+            const HabitJoinService: HabitJoinServiceClass = Container.get(HabitJoinServiceClass);
+            let result = await HabitJoinService.habitJoinCancelService(habitSeq, request.cookies.token);
 
-            response.send(new Response.success(request, request.params, next).make({roomData, getJoin}, '01'));
+            response.send(new Response.success(request, request.params, next).make({}, '01', 'Cancel Join Success'));
         } catch (e) {
             if (e.errorCode) {
                 response.status(e.status).send(new Response.fail(request, request.params, next).make({}, e.errorCode, e.message));
@@ -144,34 +123,17 @@ class HabitJoinController implements Controller {
 
     };
 
-    private updateRoomCtrl = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
+    private withdrawHabitCtrl = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
         try {
-            const HabitService: HabitServiceClass = Container.get(HabitServiceClass);
-            let result = await HabitService.updateRoomService(request.body.DtoClass, request.cookies.token);
-
-            response.send(new Response.success(request, request.params, next).make({}, '01'));
-        } catch (e) {
-            if (e.errorCode) {
-                response.status(e.status).send(new Response.fail(request, request.params, next).make({}, e.errorCode, e.message));
-                return;
-            }
-
-            next(new HttpException(e.status, e.message, request.params));
-        }
-
-    };
-
-    private deleteRoomCtrl = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
-        try {
-            const habitSeq: number = parseInt(request.params.seq);
+            const habitSeq = parseInt(request.params.seq);
             if (isNaN(habitSeq)) {
                 throw new ErrorResponse(400, '@isNaN habitSeq', '400');
             }
 
-            const HabitService: HabitServiceClass = Container.get(HabitServiceClass);
-            let result = await HabitService.deleteRoomService(habitSeq, request.cookies.token);
+            const HabitJoinService: HabitJoinServiceClass = Container.get(HabitJoinServiceClass);
+            let result = await HabitJoinService.withdrawHabitService(habitSeq, request.cookies.token);
 
-            response.send(new Response.success(request, request.params, next).make({}, '01'));
+            response.send(new Response.success(request, request.params, next).make({}, '01', 'Withdraw Join Success'));
         } catch (e) {
             if (e.errorCode) {
                 response.status(e.status).send(new Response.fail(request, request.params, next).make({}, e.errorCode, e.message));
@@ -185,12 +147,43 @@ class HabitJoinController implements Controller {
 
     // ========================================================================================================================
 
-    private getCategoryCtrl = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
+    private memberListCtrl = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
         try {
-            const HabitService: HabitServiceClass = Container.get(HabitServiceClass);
-            let categoryList = await HabitService.getCategoryService();
+            const habitSeq = parseInt(request.params.seq);
+            if (isNaN(habitSeq)) {
+                throw new ErrorResponse(400, '@isNaN habitSeq', '400');
+            }
 
-            response.send(new Response.success(request, request.params, next).make({categoryList}, '01'));
+            const page = parseInt(request.query.page);
+            if (isNaN(page)) {
+                throw new ErrorResponse(400, '@isNaN page', '400');
+            }
+
+            const HabitJoinService: HabitJoinServiceClass = Container.get(HabitJoinServiceClass);
+            let [memberList, count] = await HabitJoinService.memberListService(habitSeq, request.cookies.token, page, request.query.listType);
+
+            response.send(new Response.success(request, request.params, next)
+                              .make({memberList, count, page, itemPerPageCnt: this.Config.itemPerPageCnt, pageCount:this.Config.pageCount}, '01')
+            );
+
+        } catch (e) {
+            if (e.errorCode) {
+                response.status(e.status).send(new Response.fail(request, request.params, next).make({}, e.errorCode, e.message));
+                return;
+            }
+
+            next(new HttpException(e.status, e.message, request.params));
+        }
+
+    };
+
+    private memberStatusCtrl = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
+        try {
+            const HabitJoinService: HabitJoinServiceClass = Container.get(HabitJoinServiceClass);
+            let result = await HabitJoinService.memberStatusService(request.body.DtoClass, request.cookies.token);
+
+            response.send(new Response.success(request, request.params, next).make({}, '01'));
+
         } catch (e) {
             if (e.errorCode) {
                 response.status(e.status).send(new Response.fail(request, request.params, next).make({}, e.errorCode, e.message));

@@ -1,7 +1,5 @@
-import makeHabit from './makeHabit.dto';
-import habitList from './habitList.dto';
+import memberStatus from './memberStatus.dto';
 
 export default {
-    makeHabit,
-    habitList
+    memberStatus,
 }

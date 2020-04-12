@@ -54,6 +54,20 @@ export default class AuthDAO{
 
     }
 
+    public async getUserByUuid (uuid: string): Promise<any> {
+
+        let query =`
+            SELECT *
+            FROM t_nf_user u
+            WHERE u.uuid = ?
+            `;
+
+        const recordSet = await Mysql.exec(query, [uuid]);
+
+        return recordSet[0];
+
+    }
+
     public async getSessionBySessionId (sessionId: string): Promise<any> {
 
         let query =`

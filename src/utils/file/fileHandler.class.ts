@@ -36,7 +36,7 @@ export default class FileHandlerClass{
             }
 
             const permission = 438;
-            let fileDescriptor = fs.openSync(`${path}/${fileName}`, 'w', permission);
+            let fileDescriptor = fs.openSync(`${path}${fileName}`, 'w', permission);
 
             if (fileDescriptor) {
                 fs.writeSync(fileDescriptor, buffer, 0, buffer.length, 0);
@@ -53,8 +53,8 @@ export default class FileHandlerClass{
 
     public deleteFile(path: string, fileName: string){
         return new Promise((resolve, reject)=>{
-            if(fs.existsSync(`${this.Config.basePath}${this.Config.uploadPath}${path}/${fileName}`)) {
-                fs.unlink(`${this.Config.basePath}${this.Config.uploadPath}${path}/${fileName}`, (err)=>{
+            if(fs.existsSync(`${this.Config.basePath}${this.Config.uploadPath}${path}${fileName}`)) {
+                fs.unlink(`${this.Config.basePath}${this.Config.uploadPath}${path}${fileName}`, (err)=>{
                     if(err) throw err;
                     resolve(true);
                 });
@@ -70,7 +70,7 @@ export default class FileHandlerClass{
 
         return new Promise((resolve, reject)=>{
             // @ts-ignore
-            const command = new ffmpeg({source: `${this.Config.basePath}${this.Config.uploadPath}${path}/${fileName}`, nolog: true});
+            const command = new ffmpeg({source: `${this.Config.basePath}${this.Config.uploadPath}${path}${fileName}`, nolog: true});
 
             command
                 .setFfmpegPath(this.Config.ffmpegPath)

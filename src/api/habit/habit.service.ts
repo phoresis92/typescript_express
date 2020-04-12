@@ -205,6 +205,8 @@ export default class HabitService {
 
     };
 
+    // ========================================================================================================================
+
     public getCategoryService = async (): Promise<any> => {
 
         const categoryList = await this.HabitDAO.getHabitCategory();

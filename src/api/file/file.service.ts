@@ -61,6 +61,7 @@ export default class FileService {
             fileName = originName;
         }
 
+        path += `/`;
         const result = await this.FileHandler.uploadFileByBuffer(`${baseRoot}${path}`, fileName, FileDto.fileData.buffer);
         if (!result) {
             throw new Error('@File Upload Fail');
@@ -165,6 +166,7 @@ export default class FileService {
             }
             const convertName = `${basename(fileName, ext)}_convert.mp4`;
 
+            path += `/`
             const result = await this.FileHandler.uploadFileByBuffer(`${baseRoot}${path}`, fileName, FileDto.fileData.buffer);
 
             if (!result) {

@@ -19,7 +19,7 @@ import loaders from './loaders';
             new AuthController(),
             new HabitController(),
             new UserController(),
-            // new HabitJoinController(),
+            new HabitJoinController(),
         ],
     );
 

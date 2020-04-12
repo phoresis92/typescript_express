@@ -10,8 +10,7 @@ import ErrorResponse from '../../utils/response/ErrorResponse';
 
 import UtilsClass from '../../utils/utils';
 import ConfigClass from '../../config/config.dto';
-import HabitListDto from './dto/habitList.dto';
-import HabitDtoClass from './dto/makeHabit.dto';
+import MemberStatusDtoClass from './dto/memberStatus.dto';
 
 @Service()
 export default class HabitJoinDAO{
@@ -35,8 +34,9 @@ export default class HabitJoinDAO{
                 INSERT INTO t_nf_habit_join (user_id, uuid, habit_seq)
                 VALUES (?, ?, ?)
                 ON DUPLICATE KEY UPDATE
-                    join_status = 0
+                    join_status = 10
                     , is_leader = 0
+                    , mod_date = NOW()
             `;
 
             const insertHabit = await querySync(query, [token.userId, token.uuid, habitSeq]);
@@ -50,63 +50,11 @@ export default class HabitJoinDAO{
 
             // ==========================================================================================
 
-            query = `
-                INSERT INTO t_nf_habit_join
-                SET ?
-            `;
-
-            const insertJoin = await querySync(query, {
-                user_id: token.userId,
-                uuid: token.uuid,
-                habit_seq: insertHabit.insertId,
-                join_status: 100,
-                is_leader: 50,
-            });
-
-            // console.log(insertJoin)
-            if(insertJoin.affectedRows === 0){
-                conn.rollback();
-                throw new ErrorResponse(500, '[DB] Insert Join Error', '500');
-                return;
-            }
-
-            // ==========================================================================================
-
-            query = `
-                UPDATE t_nf_file
-                SET target_type = ?
-                    , target_key = ?
-                WHERE file_seq = ?
-            `;
-
-            if(HabitDto.sampleFileSeq !== 0){
-                const updateSampleFile = await querySync(query, ['HABIT_SAMPLE', insertHabit.insertId, HabitDto.sampleFileSeq]);
-
-                if(updateSampleFile.affectedRows === 0){
-                    conn.rollback();
-                    throw new ErrorResponse(500, '[DB] Update Sample File', '500');
-                    return;
-                }
-
-            }
-
-            if(HabitDto.profileFileSeq !== 0){
-                const updateProfileFile = await querySync(query, ['HABIT', insertHabit.insertId, HabitDto.profileFileSeq]);
-
-                if(updateProfileFile.affectedRows === 0){
-                    conn.rollback();
-                    throw new ErrorResponse(500, '[DB] Update Profile File', '500');
-                    return;
-                }
-
-            }
-
             conn.commit();
 
             return true;
 
         }catch (err) {
-            console.log(err)
             throw err;
             conn.rollback();
 
@@ -117,17 +65,121 @@ export default class HabitJoinDAO{
 
     }
 
-    public async getRoomList (token: TokenInterface, HabitListDto: HabitListDto): Promise<any> {
+    public async cancelHabitJoin (habitSeq: number, token: TokenInterface): Promise<any> {
+
+        const [conn, querySync] = await Mysql.getConn();
+
+        try{
+
+            let query = `
+                UPDATE t_nf_habit_join
+                SET join_status = 0
+                    , mod_date = NOW()
+                WHERE user_id = ?
+                    AND habit_seq = ?
+            `;
+
+            const cancelHabit = await querySync(query, [token.userId, habitSeq]);
+
+            // console.log(insertHabit)
+            if(cancelHabit.affectedRows === 0){
+                conn.rollback();
+                throw new ErrorResponse(500, '[DB] Update Habit Error', '500');
+                return;
+            }
+
+            // ==========================================================================================
+
+            conn.commit();
+
+            return true;
+
+        }catch (err) {
+            throw err;
+            conn.rollback();
+
+        }finally{
+            conn.release();
+
+        }
+
+    }
+
+    public async withdrawHabitJoin (habitSeq: number, token: TokenInterface): Promise<any> {
+
+        const [conn, querySync] = await Mysql.getConn();
+
+        try{
+
+            let query = `
+                UPDATE t_nf_habit_join
+                SET join_status = 70
+                    , mod_date = NOW()
+                WHERE user_id = ?
+                    AND habit_seq = ?
+            `;
+
+            const withdrawHabit = await querySync(query, [token.userId, habitSeq]);
+
+            // console.log(insertHabit)
+            if(withdrawHabit.affectedRows === 0){
+                conn.rollback();
+                throw new ErrorResponse(500, '[DB] Withdraw Habit Error', '500');
+                return;
+            }
+
+            // ==========================================================================================
+
+            query = `
+                UPDATE t_nf_habit h
+                SET join_cnt = (
+                    SELECT COUNT(1)
+                    FROM t_nf_habit_join
+                    WHERE habit_seq = h.habit_seq
+                        AND join_status = 100 
+                    )
+                WHERE habit_seq = ?
+            `;
+
+            const joinCntUpdate = await querySync(query, [habitSeq]);
+            if(joinCntUpdate.affectedRows === 0){
+                conn.rollback();
+                throw new ErrorResponse(500, '[DB] Join Count Update Error', '500');
+                return;
+            }
+
+            conn.commit();
+
+            return true;
+
+        }catch (err) {
+            throw err;
+            conn.rollback();
+
+        }finally{
+            conn.release();
+
+        }
+
+    }
+
+    // ========================================================================================================================
+
+    public async memberList (habitSeq: number, token: TokenInterface, page:number, listType:number, permission: string[]): Promise<any> {
 
         const [conn, querySync] = await Mysql.getConn();
 
         try{
 
             let selectTarget = `
-                SELECT h.*
-                    , hc.category_title
-                    , CONVERT(u.uuid, CHAR(50)) AS uuid
-                    , u.nick_name
+                SELECT
+                    user_id,
+                    CONVERT(uuid, CHAR(50)) AS uuid,
+                    habit_seq,
+                    join_status,
+                    is_leader,
+                    mod_date,
+                    reg_date
             `;
 
             let selectCount = `
@@ -135,39 +187,54 @@ export default class HabitJoinDAO{
             `;
 
             let body = `
-                FROM (
-                    SELECT *
-                    FROM t_nf_habit h
-                    WHERE h.habit_status = 30
-                        AND h.start_date > NOW()
-                        ${HabitListDto.habitCategory !== 0 ? `
-                        AND h.habit_category_seq = ${HabitListDto.habitCategory}
-                        ` : ``}
-                    ) h
-                INNER JOIN t_nf_habit_category hc ON hc.habit_category_seq = h.habit_category_seq
-                INNER JOIN t_nf_habit_join hj ON hj.habit_seq = h.habit_seq
-                    AND hj.join_status = 100
-                    AND hj.is_leader = 50
-                INNER JOIN t_nf_user u ON u.user_id = hj.user_id
-                    AND u.user_status = 50
+                FROM t_nf_habit_join hj
+                WHERE hj.habit_seq = ${mysql.escape(habitSeq)}
+                    AND hj.join_status IN (${mysql.escape(permission)})
+                    AND hj.user_id != ${mysql.escape(token.userId)}
+                    ${listType === 1 ? `` : (listType === 2 ? `
+                        AND hj.join_status = 100
+                    ` : `
+                        AND hj.join_status = 10
+                    `)}
             `;
 
             let foot = `
-                ORDER BY h.reg_date DESC
-                LIMIT ${(HabitListDto.page - 1) * this.Config.itemPerPageCnt}, ${this.Config.itemPerPageCnt}
+                ORDER BY hj.reg_date DESC
+                LIMIT ${(page - 1) * this.Config.itemPerPageCnt}, ${this.Config.itemPerPageCnt}
             `;
 
             const queryList = [
-                selectTarget + body + foot,
+                `
+                    SELECT 
+                        u.nick_name
+                        , i.uuid
+                        , i.join_status
+                        , i.is_leader
+                        , i.mod_date
+                        , CONCAT(f.file_path, f.file_name) AS file_path
+                        , CONCAT(f.thumb_path, f.thumb_name) AS thumb_path
+                    FROM (${selectTarget + body + foot}) i
+                    INNER JOIN t_nf_user u ON u.user_id = i.user_id
+                        AND u.user_status = 50
+                    LEFT JOIN t_nf_file f ON f.target_type = 'USER'
+                        AND f.target_key = u.uuid
+                `,
                 selectCount + body
             ];
 
             // console.log(queryList[0])
             const recordSet = await querySync(queryList.join(';'));
+            conn.commit();
             return [recordSet[0], recordSet[1][0].count];
 
+            // const memberList = await querySync(query, [habitSeq, permission]);
+
+            // ==========================================================================================
+
+
+            // return memberList;
+
         }catch (err) {
-            console.log(err)
             throw err;
             conn.rollback();
 
@@ -178,33 +245,13 @@ export default class HabitJoinDAO{
 
     }
 
-    public async getRoomBySeq (habitSeq: number, token: TokenInterface): Promise<any> {
+    public async getTargetStatus (MemberStatus: MemberStatusDtoClass, token: TokenInterface, targetUserData: any): Promise<any> {
 
         const [conn, querySync] = await Mysql.getConn();
 
         try{
 
             let query = `
-                SELECT h.*
-                    , hc.category_title
-                    , CONVERT(u.uuid, CHAR(50)) AS uuid
-                    , u.nick_name
-                FROM (
-                    SELECT *
-                    FROM t_nf_habit
-                    WHERE habit_seq = ?
-                    ) h
-                INNER JOIN t_nf_habit_category hc ON hc.habit_category_seq = h.habit_category_seq
-                INNER JOIN t_nf_habit_join hj ON hj.habit_seq = h.habit_seq
-                    AND hj.join_status = 100
-                    AND hj.is_leader = 50
-                INNER JOIN t_nf_user u ON u.user_id = hj.user_id
-                    AND u.user_status = 50
-            `;
-
-            const getHabit = await querySync(query, [habitSeq]);
-
-            query = `
                 SELECT *
                     , CONVERT(uuid, CHAR(50)) AS uuid
                 FROM t_nf_habit_join
@@ -212,12 +259,12 @@ export default class HabitJoinDAO{
                     AND user_id = ?
             `;
 
-            const getJoin = await querySync(query, [habitSeq, token.userId]);
+            const targetJoin = (await querySync(query, [MemberStatus.habitSeq, targetUserData.user_id]))[0];
 
-            return [getHabit[0], getJoin[0]];
+            conn.commit();
+            return targetJoin;
 
         }catch (err) {
-            console.log(err)
             throw err;
             conn.rollback();
 
@@ -228,156 +275,46 @@ export default class HabitJoinDAO{
 
     }
 
-    public async updateRoom (HabitDto: HabitDtoClass, token: TokenInterface): Promise<any> {
+    public async changeTargetStatus (habitSeq: number, userId: number, changeStatus: number): Promise<any> {
 
         const [conn, querySync] = await Mysql.getConn();
 
         try{
 
             let query = `
-                UPDATE t_nf_habit
-                SET ?
-                WHERE habit_seq = ${mysql.escape(HabitDto.habitSeq)}
+                UPDATE t_nf_habit_join
+                SET join_status = ?
+                    , mod_date = NOW()
+                WHERE user_id = ?
+                    AND habit_seq = ?
             `;
 
-            const updateHabit = await querySync(query, {
-                habit_category_seq: HabitDto.habitCategory,
-                habit_title: HabitDto.habitTitle,
-                habit_goal: HabitDto.habitGoal,
-                frequency: HabitDto.frequency,
-                period: HabitDto.period,
-                start_date: HabitDto.startDate,
-                end_date: HabitDto.endDate,
-                cert_start: HabitDto.certStart,
-                cert_end: HabitDto.certEnd,
-                max_join_cnt: HabitDto.maxJoinCnt,
-                cert_type: HabitDto.certType.join(','),
-                picture_type: HabitDto.pictureType.join(','),
-                cert_method: HabitDto.certMethod,
-            });
+            const updateStatus = await querySync(query, [changeStatus, userId, habitSeq]);
 
-            // console.log('updateHabit', updateHabit)
-            if(updateHabit.affectedRows === 0){
+            // console.log(insertHabit)
+            if(updateStatus.affectedRows === 0){
                 conn.rollback();
-                throw new ErrorResponse(500, '[DB] Update Habit Error', '500');
+                throw new ErrorResponse(500, '[DB] Update Status Error', '500');
                 return;
             }
 
             // ==========================================================================================
 
             query = `
-                UPDATE t_nf_file
-                SET target_type = ?
-                    , target_key = ?
-                WHERE file_seq = ?
-            `;
-
-            if(HabitDto.sampleFileSeq !== 0){
-
-                // Delete exist file
-                const existSampleFileList = await querySync(`
-                    SELECT * 
-                    FROM t_nf_file
-                    WHERE target_type = 'HABIT_SAMPLE'
-                        AND target_key = ? 
-                `, [HabitDto.habitSeq]);
-
-                // console.log('existSampleFileList', existSampleFileList)
-                if(existSampleFileList.length !== 0){
-                    for(let file of existSampleFileList){
-                        await this.FileHandle.deleteFile(file.file_path, file.file_name);
-                        await this.FileHandle.deleteFile(file.thumb_path, file.thumb_name);
-                    }
-
-                    let delteSampleFile = await querySync(`
-                        DELETE  
-                        FROM t_nf_file
-                        WHERE file_seq IN (?) 
-                    `, [existSampleFileList.map((val: any) => val.file_seq)]);
-
-                    // console.log(delteSampleFile)
-                }
-
-                // Update temp file
-                const updateSampleFile = await querySync(query, ['HABIT_SAMPLE', HabitDto.habitSeq, HabitDto.sampleFileSeq]);
-
-                // console.log('updateSampleFile', updateSampleFile)
-                if(updateSampleFile.affectedRows === 0){
-                    conn.rollback();
-                    throw new ErrorResponse(500, '[DB] Update Sample File', '500');
-                    return;
-                }
-
-            }
-
-            if(HabitDto.profileFileSeq !== 0){
-
-                // Delete exist file
-                const existProfileFileList = await querySync(`
-                    SELECT * 
-                    FROM t_nf_file
-                    WHERE target_type = 'HABIT'
-                        AND target_key = ? 
-                `, [HabitDto.habitSeq]);
-
-                // console.log('existProfileFileList', existProfileFileList)
-                if(existProfileFileList.length !== 0){
-                    for(let file of existProfileFileList){
-                        await this.FileHandle.deleteFile(file.file_path, file.file_name);
-                        await this.FileHandle.deleteFile(file.thumb_path, file.thumb_name);
-                    }
-                    await querySync(`
-                        DELETE  
-                        FROM t_nf_file
-                        WHERE file_seq IN (?) 
-                    `, [existProfileFileList.map((val: any) => val.file_seq)]);
-                }
-
-                // Update temp file
-                const updateProfileFile = await querySync(query, ['HABIT', HabitDto.habitSeq, HabitDto.profileFileSeq]);
-
-                // console.log('updateProfileFile', updateProfileFile)
-                if(updateProfileFile.affectedRows === 0){
-                    conn.rollback();
-                    throw new ErrorResponse(500, '[DB] Update Profile File', '500');
-                    return;
-                }
-
-            }
-
-            conn.commit();
-
-            return true;
-
-        }catch (err) {
-            console.log(err)
-            throw err;
-            conn.rollback();
-
-        }finally{
-            conn.release();
-
-        }
-
-    }
-
-    public async deleteRoom (habitSeq: number, token: TokenInterface): Promise<any> {
-
-        const [conn, querySync] = await Mysql.getConn();
-
-        try{
-
-            let query = `
-                UPDATE t_nf_habit
-                SET habit_status = 10
+                UPDATE t_nf_habit h
+                SET join_cnt = (
+                    SELECT COUNT(1)
+                    FROM t_nf_habit_join
+                    WHERE habit_seq = h.habit_seq
+                        AND join_status = 100 
+                    )
                 WHERE habit_seq = ?
             `;
 
-            const deleteHabit = await querySync(query, [habitSeq]);
-
-            if(deleteHabit.affectedRows === 0){
+            const joinCntUpdate = await querySync(query, [habitSeq]);
+            if(joinCntUpdate.affectedRows === 0){
                 conn.rollback();
-                throw new ErrorResponse(500, '[DB] Update Habit Error', '500');
+                throw new ErrorResponse(500, '[DB] Join Count Update Error', '500');
                 return;
             }
 
@@ -386,7 +323,6 @@ export default class HabitJoinDAO{
             return true;
 
         }catch (err) {
-            console.log(err)
             throw err;
             conn.rollback();
 
@@ -394,45 +330,6 @@ export default class HabitJoinDAO{
             conn.release();
 
         }
-
-    }
-
-    // ==============================================================================================
-
-    public async categoryValidCheck (categorySeq: number): Promise<any> {
-
-        let query =`
-            SELECT *
-            FROM t_nf_habit_category hc
-            WHERE hc.category_status = 50
-                AND hc.habit_category_seq = ?
-            `;
-
-        const recordSet = await Mysql.exec(query, [categorySeq]);
-
-        return recordSet[0];
-
-    }
-
-    public async getHabitCategory (): Promise<any> {
-
-        let query = `
-            SELECT *
-            FROM t_nf_habit_category
-            WHERE category_status = 50
-            ORDER BY order_num ASC
-        `;
-
-        // const [conn, querySync] = await Mysql.getConn();
-        //
-        // const recordSet = querySync();
-        //
-        // conn.commit();
-        // conn.release();
-
-        const recordSet = await Mysql.exec(query);
-
-        return recordSet;
 
     }
 

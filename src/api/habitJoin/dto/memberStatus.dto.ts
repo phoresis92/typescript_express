@@ -27,16 +27,25 @@ import {
 } from "class-validator";
 
 import {ArrayIsIn} from '../../../utils/classValidator/ArrayIsIn';
+import moment from 'moment';
 
-class HabitListDto {
+
+class MemberStatusDto {
+
     @IsNotEmpty()
     @IsNumber()
-    public habitCategory: number;
+    @Min(1)
+    public habitSeq: number;
 
     @IsNotEmpty()
-    @IsNumber()
-    public page: number;
+    @IsString()
+    public uuid: string;
+
+    @IsNotEmpty()
+    @IsString()
+    @IsIn(['APPROVE', 'REFUSE', 'FORCE_DROP'])
+    public statusType: string;
 
 }
 
-export default HabitListDto;
+export default MemberStatusDto;
