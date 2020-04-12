@@ -44,17 +44,24 @@ export default class AuthDAO{
 
         let query =`
             SELECT 
-                CONVERT(uuid, CHAR(50)) AS uuid,
-                nick_name,
-                user_type,
-                user_status,
-                reg_date,
-                agree_use,
-                agree_use_date,
-                agree_personal_info,
-                agree_personal_info_date
-            FROM t_nf_user u
-            WHERE u.user_id = ?
+                CONVERT(u.uuid, CHAR(50)) AS uuid
+                , u.nick_name
+                , u.user_type
+                , u.user_status
+                , u.reg_date
+                , u.agree_use
+                , u.agree_use_date
+                , u.agree_personal_info
+                , u.agree_personal_info_date
+                , CONCAT(f.file_path, f.file_name) AS file_path
+                , CONCAT(f.thumb_path, f.thumb_name) AS thumb_path
+            FROM (
+                SELECT *
+                FROM t_nf_user u
+                WHERE u.user_id = ?
+                ) u
+            LEFT JOIN t_nf_file f ON f.target_type = 'USER'
+                AND f.target_key = u.uuid
             `;
 
         const recordSet = await Mysql.exec(query, [userId]);
