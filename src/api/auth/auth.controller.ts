@@ -59,9 +59,9 @@ class AuthController implements Controller {
     private signinCtrl = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
         try {
             const AuthService: AuthServiceClass = Container.get(AuthServiceClass);
-            let {accessToken, refreshToken} = await AuthService.signinService(request.body.DtoClass);
+            let {accessToken, refreshToken, userData} = await AuthService.signinService(request.body.DtoClass);
 
-            response.send(new Response.success(request, request.params, next).make({accessToken, refreshToken}, '01', 'Success Sign In'));
+            response.send(new Response.success(request, request.params, next).make({accessToken, refreshToken, userData}, '01', 'Success Sign In'));
         } catch (e) {
             if (e.errorCode) {
                 response.status(e.status).send(new Response.fail(request, request.params, next).make({}, e.errorCode, e.message));

@@ -43,7 +43,16 @@ export default class AuthDAO{
     public async getUserByUserId (userId: number): Promise<any> {
 
         let query =`
-            SELECT *
+            SELECT 
+                CONVERT(uuid, CHAR(50)) AS uuid,
+                nick_name,
+                user_type,
+                user_status,
+                reg_date,
+                agree_use,
+                agree_use_date,
+                agree_personal_info,
+                agree_personal_info_date
             FROM t_nf_user u
             WHERE u.user_id = ?
             `;

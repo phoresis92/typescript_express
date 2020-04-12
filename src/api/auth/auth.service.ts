@@ -146,7 +146,7 @@ export default class AuthService {
             //     req.yar.set('TOKEN', token);
             // }
 
-            return {accessToken, refreshToken};
+            return {accessToken, refreshToken, userData};
         }
 
     };
