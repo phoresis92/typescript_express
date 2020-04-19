@@ -24,12 +24,14 @@ const dbLogMiddleware = async (nextData: ResponseInterface | Error, request: Req
     // const mysql: Mysql = Container.get('mysql');
     const logErrQuery = new LogErrQuery();
 
+    const ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+
     try {
         const recordSet = await Mysql.exec(logErrQuery.create(),
                    [
                        response.statusCode,
                        Config.server,
-                       1,
+                       ip,
                        request.method,
                        request.path,
                        JSON.stringify(request.headers),

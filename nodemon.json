@@ -7,5 +7,5 @@
   "ignore": [
     "src/**/*.spec.ts"
   ],
-  "exec": "cross-env NODE_ENV=development ts-node  --transpile-only ./src/WAS.ts"
+  "exec": "cross-env NODE_ENV=development SERVER=WAS ts-node ./src/WAS.ts"
 }

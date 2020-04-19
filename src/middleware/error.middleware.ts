@@ -20,14 +20,14 @@ const errorMiddleware = async (error: HttpException, request: Request, response:
     const message = error.message || 'Something went wrong';
     const params = error.params || {};
 
-    console.log(request.body)
+    const ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
 
     try {
         const recordSet = await Mysql.exec(logErrQuery.create(),
             [
                status,
                Config.server,
-               1,
+               ip,
                request.method,
                request.path,
                JSON.stringify(request.headers),

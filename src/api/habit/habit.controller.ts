@@ -56,6 +56,11 @@ class HabitController implements Controller {
                 , this.roomListCtrl);
 
         this.router
+            .get(`/habit/category`
+                , this.JwtValid.decodeToken()
+                , this.getCategoryCtrl);
+
+        this.router
             .get(`/habit/:seq`
                 , this.JwtValid.decodeToken()
                 , this.roomDetailCtrl);
@@ -77,11 +82,6 @@ class HabitController implements Controller {
             .delete(`/habit/:seq`
                 , this.JwtValid.decodeToken()
                 , this.deleteRoomCtrl);
-
-        this.router
-            .get(`/habit/category`
-                , this.JwtValid.decodeToken()
-                , this.getCategoryCtrl);
 
     }
 

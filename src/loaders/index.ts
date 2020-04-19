@@ -74,7 +74,7 @@ export default async () => {
         throw new Error('Redis Setup Error');
     });
 
-    Container.set('redis', redis.createClient());
+    Container.set('redis', redisClient);
 
 
 

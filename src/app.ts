@@ -32,7 +32,7 @@ class App {
   }
 
   public listen() {
-    this.app.listen(this.port, () => {
+    this.app.listen(this.port, '0.0.0.0', () => {
       this.logger.info(`
       ################################################
       🛡 Server listening on port: ${this.port} 🛡️ 
