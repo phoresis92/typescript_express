@@ -90,7 +90,8 @@ export default class FileService {
         if (FileDto.makeThumb === 0 && FileDto.thumbData === undefined) {
             returnObj.code = '01';
 
-            await this.FileDAO.insertFile(returnObj);
+            const fileSeq = await this.FileDAO.insertFile(returnObj);
+            returnObj.fileSeq = fileSeq;
             return returnObj;
 
         } else if (FileDto.thumbData !== undefined) {
@@ -109,7 +110,8 @@ export default class FileService {
             returnObj.thumbHeight = thumbSize.height;
             returnObj.code = '02';
 
-            await this.FileDAO.insertFile(returnObj);
+            const fileSeq = await this.FileDAO.insertFile(returnObj);
+            returnObj.fileSeq = fileSeq;
             return returnObj;
 
         } else {
@@ -128,7 +130,8 @@ export default class FileService {
             returnObj.thumbHeight = thumbSize.height;
             returnObj.code = '03';
 
-            await this.FileDAO.insertFile(returnObj);
+            const fileSeq = await this.FileDAO.insertFile(returnObj);
+            returnObj.fileSeq = fileSeq;
             return returnObj;
 
         }
@@ -243,7 +246,8 @@ export default class FileService {
                 returnObj.thumbHeight = thumbHeight;
                 returnObj.code = '03';
 
-                await this.FileDAO.insertFile(returnObj);
+                const fileSeq = await this.FileDAO.insertFile(returnObj);
+                returnObj.fileSeq = fileSeq;
                 resolve(returnObj);
 
             }
@@ -270,6 +274,7 @@ export class FileResponseClass extends FileDtoClass {
     thumbWidth: number;
     thumbHeight: number;
     movPlaytime: number;
+    fileSeq: number;
 
     public insertFile() {
         let query = `
