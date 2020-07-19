@@ -1,4 +1,4 @@
-import * as express from 'index.d.ts';
+import * as express from 'express';
 import HttpException from '../../exceptions/HttpException';
 // import {getRepository, createConnection} from 'typeorm';
 // import Contents from '../entity/contents/contents.entity';
@@ -49,7 +49,7 @@ class VersionController implements Controller {
             const versionService = Container.get(VersionService);
             const {versionData} = await versionService.getRecent(type);
 
-            response.send(new SuccessResponse(request, request.params, next).make({versionData}, 1));
+            response.send(new SuccessResponse(request, request.params, next).make({versionData}, '01'));
         } catch (e) {
             if (e instanceof ErrorResponse) {
                 response.status(e.status).send(new FailResponse(request, request.params, next).make({}, e.errorCode, e.message));

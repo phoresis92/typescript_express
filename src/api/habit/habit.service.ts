@@ -7,7 +7,7 @@ import {Container, Service, Inject} from 'typedi';
 import {promisify} from 'util';
 import TokenInterface from '../../interfaces/token.interface';
 
-import UtilsClass from '../../utils/utils';
+import UtilsClass from '../../utils/Utils';
 
 import ConfigClass from '../../config/config.dto';
 import HabitListDto from './dto/habitList.dto';

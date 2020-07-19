@@ -1,6 +1,6 @@
 import {getRepository} from 'typeorm';
 import Contents from '../../entity/contents/contents.entity';
-import Utils from '../../utils/utils';
+import Utils from '../../utils/Utils';
 import {NextFunction} from "index.d.ts";
 // import * as express from "./post.controller";
 // import CreatePostDto from "./post.dto";

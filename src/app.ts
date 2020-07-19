@@ -8,22 +8,23 @@ import helmet from "helmet";
 const multer = require('multer');
 import Status404Exception from './exceptions/Status404Exception';
 import Controller from './interfaces/controller.interface';
+import LoggerClass from './utils/logger';
 import errorMiddleware from './middleware/error.middleware';
 import logErrMiddleware from './middleware/dblog.middleware';
-import Config from "./config/config.dto";
+import ConfigClass from "./config/config.dto";
+import {SERVERTYPE} from "./config/constant.dto";
 
 
 
 class App {
-  private logger: Logger = Container.get('logger');
+  private logger: Logger = LoggerClass.getInstance();
   private app: express.Application;
-  private port: number;
+  private port: number = ConfigClass.port;
 
-  private Config: Config = Container.get('Config');
 
   constructor(controllers: Controller[]) {
     this.app = express();
-    this.getPort();
+    /*this.getPort();*/
 
     this.initializeMiddlewares();
     this.initializeControllers(controllers);
@@ -35,7 +36,7 @@ class App {
     this.app.listen(this.port, '0.0.0.0', () => {
       this.logger.info(`
       ################################################
-      🛡 Server listening on port: ${this.port} 🛡️ 
+      🛡  ${ConfigClass.server} [${ConfigClass.serverId}] listening on port: ${this.port} 🛡️ 
       ################################################
     `);
     });
@@ -45,24 +46,24 @@ class App {
     return this.app;
   }
 
-  private getPort(){
-    switch (this.Config.server) {
-      case this.Config.serverType.WAS:
-        this.port = this.Config.wasPort;
+  /*private getPort(){
+    switch (ConfigClass.server) {
+      case SERVERTYPE.WAS:
+        this.port = ConfigClass.wasPort;
         break;
-      case this.Config.serverType.PTMS:
-        this.port = this.Config.ptmsPort;
+      case SERVERTYPE.PTMS:
+        this.port = ConfigClass.ptmsPort;
         break;
-      case this.Config.serverType.DFS:
-        this.port = this.Config.dfsPort;
+      case SERVERTYPE.DFS:
+        this.port = ConfigClass.dfsPort;
         break;
     }
-  }
+  }*/
 
   private initializeMiddlewares() {
     this.app.use(bodyParser.json()); // for parsing application/json
     this.app.use(bodyParser.urlencoded({extended:true})); // for parsing application/x-www-form-urlencoded
-    (this.Config.server !== 'DFS' ? this.app.use(multer().none()) : null); // for parsing multipart/form-data
+    (ConfigClass.server !== 'DFS' ? this.app.use(multer().none()) : null); // for parsing multipart/form-data
     this.app.use(cookieParser());
     this.app.use(helmet());
     this.app.use(helmet.xssFilter());
@@ -89,7 +90,7 @@ class App {
 
   private initializeControllers(controllers: Controller[]) {
     controllers.forEach((controller) => {
-      this.app.use(this.Config.api.prefix, controller.router);
+      this.app.use(ConfigClass.api.prefix, controller.router);
     });
   }
 

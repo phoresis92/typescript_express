@@ -15,8 +15,8 @@ import ErrorResponse from '../response/ErrorResponse';
 
 export default class FileHandlerClass{
 
-    @Inject()
-    private Config: ConfigClass;
+    // @Inject()
+    // private Config: ConfigClass;
 
     constructor(){
     }
@@ -53,8 +53,8 @@ export default class FileHandlerClass{
 
     public deleteFile(path: string, fileName: string){
         return new Promise((resolve, reject)=>{
-            if(fs.existsSync(`${this.Config.basePath}${this.Config.uploadPath}${path}${fileName}`)) {
-                fs.unlink(`${this.Config.basePath}${this.Config.uploadPath}${path}${fileName}`, (err)=>{
+            if(fs.existsSync(`${ConfigClass.basePath}${ConfigClass.uploadPath}${path}${fileName}`)) {
+                fs.unlink(`${ConfigClass.basePath}${ConfigClass.uploadPath}${path}${fileName}`, (err)=>{
                     if(err) throw err;
                     resolve(true);
                 });
@@ -73,7 +73,7 @@ export default class FileHandlerClass{
             const command = new ffmpeg({source: `${this.Config.basePath}${this.Config.uploadPath}${path}${fileName}`, nolog: true});
 
             command
-                .setFfmpegPath(this.Config.ffmpegPath)
+                .setFfmpegPath(ConfigClass.ffmpegPath)
                 //set the size
                 .withSize(encodeSize)
                 // set fps
@@ -81,7 +81,7 @@ export default class FileHandlerClass{
                 // set output format to force
                 .toFormat('mp4')
                 // save to file <-- the new file I want -->
-                .saveToFile(`${this.Config.basePath}${this.Config.uploadPath}${path}/${convertName}`)
+                .saveToFile(`${ConfigClass.basePath}${ConfigClass.uploadPath}${path}/${convertName}`)
                 // setup event handlers
                 .on('end', function () {
 

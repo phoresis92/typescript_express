@@ -1,31 +1,33 @@
 import { Container } from 'typedi';
+import {Logger} from 'winston';
+import ConfigClass from '../config/config.dto';
+import MysqlTemplate from '../utils/database/MysqlTemplate';
+
 import FileHandler from '../utils/file/fileHandler.class';
 
-import LoggerInstance from './logger';
-import ConfigClass from '../config/config.dto';
+import LoggerClass from '../utils/logger';
 import { Utils } from '../utils';
-import mysql from './MysqlTemplate';
 
 // import config from '../config/index.ts';
 
-export default ({ /*mongoConnection*/ models }: { /*mongoConnection;*/ models: { name: string; model: any }[] }) => {
+export default (/*{ /!*mongoConnection*!/ models }: { /!*mongoConnection;*!/ models: { name: string; model: any }[] }*/) => {
+
+  const logger: Logger = LoggerClass.getInstance();
+
   try {
-    models.forEach(m => {
+
+
+    /*models.forEach(m => {
       Container.set(m.name, m.model);
-    });
+    });*/
 
-    const Config: ConfigClass = Container.get('Config');
-
-    Container.set('logger', LoggerInstance);
     Container.set('utils', new Utils());
-    Container.set('mysql', mysql);
-
+    Container.set('logger', logger);
+    Container.set('mysql', MysqlTemplate.getInstance());
     Container.set('FileHandler', new FileHandler());
 
-    return LoggerInstance
-
-  } catch (e) {
-    LoggerInstance.error('🔥 Error on dependency injector loader: %o', e);
-    throw e;
+  } catch (err) {
+      logger.error(`🔥 Error on dependency injector loader:\n\t${err.message}`);
+      throw err;
   }
 };

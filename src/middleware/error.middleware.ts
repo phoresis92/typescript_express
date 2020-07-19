@@ -13,7 +13,6 @@ import {Logger} from "winston";
 const errorMiddleware = async (error: HttpException, request: Request, response: Response, next: NextFunction) => {
     // const logErrRepository = getRepository(LogErr);
     const logger: Logger = Container.get('logger');
-    const Config: ConfigClass = Container.get('Config');
     const logErrQuery = new LogErrQuery();
 
     const status = error.status || 500;
@@ -25,16 +24,16 @@ const errorMiddleware = async (error: HttpException, request: Request, response:
     try {
         const recordSet = await Mysql.exec(logErrQuery.create(),
             [
-               status,
-               Config.server,
-               ip,
-               request.method,
-               request.path,
-               JSON.stringify(request.headers),
-               JSON.stringify(params),
-               JSON.stringify(request.query),
-               JSON.stringify(request.body),
-               JSON.stringify(message)
+                status,
+                ConfigClass.server,
+                ip,
+                request.method,
+                request.path,
+                JSON.stringify(request.headers),
+                JSON.stringify(params),
+                JSON.stringify(request.query),
+                JSON.stringify(request.body),
+                JSON.stringify(message)
             ]
         );
         //     const newLog = logErrRepository.create({

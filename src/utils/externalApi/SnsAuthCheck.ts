@@ -100,7 +100,7 @@ export default class SnsAuthCheck {
         // @ts-ignore
         let serviceToken = await Axios({
             method: 'get',
-            url: `${baseUrl}/oauth/access_token?client_id=${this.Config.facebookId}&client_secret=${this.Config.facebookSecret}&grant_type=client_credentials`,
+            url: `${baseUrl}/oauth/access_token?client_id=${ConfigClass.facebookId}&client_secret=${ConfigClass.facebookSecret}&grant_type=client_credentials`,
         })
             .then((response: any)=>{
                 console.log(response)

@@ -2,11 +2,11 @@ import {randomBytes} from "crypto";
 import argon2 from "argon2";
 import {Inject, Service} from 'typedi';
 import mysql from 'mysql';
+import MysqlTemplate from '../../utils/database/MysqlTemplate';
 
-import Mysql from '../../loaders/MysqlTemplate';
 import ErrorResponse from '../../utils/response/ErrorResponse';
 
-import UtilsClass from '../../utils/utils';
+import UtilsClass from '../../utils/Utils';
 import SignupDtoClass from './dto/signup.dto';
 
 @Service()
@@ -14,6 +14,8 @@ export default class AuthDAO{
 
     @Inject('utils')
     private Utils: UtilsClass;
+    @Inject('mysql')
+    private Mysql: MysqlTemplate;
 
     constructor(){}
 
@@ -34,7 +36,7 @@ export default class AuthDAO{
             `
         }
 
-        const recordSet = await Mysql.exec(query, [loginId]);
+        const recordSet = await this.Mysql.query(query, [loginId]);
 
         return recordSet[0];
 
@@ -64,7 +66,7 @@ export default class AuthDAO{
                 AND f.target_key = u.uuid
             `;
 
-        const recordSet = await Mysql.exec(query, [userId]);
+        const recordSet = await this.Mysql.query(query, [userId]);
 
         return recordSet[0];
 
@@ -78,7 +80,7 @@ export default class AuthDAO{
             WHERE u.uuid = ?
             `;
 
-        const recordSet = await Mysql.exec(query, [uuid]);
+        const recordSet = await this.Mysql.query(query, [uuid]);
 
         return recordSet[0];
 
@@ -92,7 +94,7 @@ export default class AuthDAO{
             WHERE us.session_id = ?
             `;
 
-        const recordSet = await Mysql.exec(query, [sessionId]);
+        const recordSet = await this.Mysql.query(query, [sessionId]);
 
         return recordSet[0];
 
@@ -107,7 +109,7 @@ export default class AuthDAO{
                 AND us.login_group = ?
             `;
 
-        const recordSet = await Mysql.exec(query, [userId, loginGroup]);
+        const recordSet = await this.Mysql.query(query, [userId, loginGroup]);
 
         return recordSet[0];
 
@@ -121,7 +123,7 @@ export default class AuthDAO{
                 AND login_group = ?
             `;
 
-        const recordSet = await Mysql.exec(query, [userId, loginGroup]);
+        const recordSet = await this.Mysql.query(query, [userId, loginGroup]);
 
         return recordSet;
 
@@ -137,13 +139,14 @@ export default class AuthDAO{
         if(conn){
             conn.query(query, (err, result)=>{
                 if(err){
-
+                    throw err;
+                    return;
                 }
 
                 return result;
             })
         }else{
-            const recordSet = await Mysql.exec(query, [sessionId]);
+            const recordSet = await this.Mysql.query(query, [sessionId]);
 
             return recordSet;
 
@@ -164,7 +167,7 @@ export default class AuthDAO{
                 , push_key = ?
             `;
 
-        const recordSet = await Mysql.exec(query, [sessionId, userId, (osType === 'AOD' || osType === 'IOS' ? 'MOBILE' : (osType === 'WEB' ? 'WEB' : 'ETC')), osType, osVersion, appVersion, pushKey]);
+        const recordSet = await this.Mysql.query(query, [sessionId, userId, (osType === 'AOD' || osType === 'IOS' ? 'MOBILE' : (osType === 'WEB' ? 'WEB' : 'ETC')), osType, osVersion, appVersion, pushKey]);
 
         return recordSet;
 
@@ -180,7 +183,7 @@ export default class AuthDAO{
             WHERE session_id = ?
             `;
 
-        const updateSessionResult = await Mysql.exec(updateSession, [pushKey, sessionId]);
+        const updateSessionResult = await this.Mysql.query(updateSession, [pushKey, sessionId]);
 
         let updateLogin = `
             UPDATE t_nf_user_login ul
@@ -188,7 +191,7 @@ export default class AuthDAO{
             WHERE user_id = ?
         `;
 
-        const updateLoginResult = await Mysql.exec(updateLogin, [userId]);
+        const updateLoginResult = await this.Mysql.query(updateLogin, [userId]);
 
 
         return {updateSessionResult, updateLoginResult};
@@ -211,7 +214,7 @@ export default class AuthDAO{
         const uuid = this.Utils.makeUserId();
         let userId: number;
 
-        const [conn, querySync] = await Mysql.getConn();
+        const [conn, querySync] = await this.Mysql.getConn();
 
         try{
 

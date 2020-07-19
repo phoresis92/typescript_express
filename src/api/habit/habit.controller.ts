@@ -19,7 +19,7 @@ class HabitController implements Controller {
     public path = '/habit';
     public router = express.Router();
 
-    private Config: ConfigClass = Container.get('Config');
+    // private Config: ConfigClass = Container.get('Config');
 
     private JwtValid: JwtValidClass;
 
@@ -111,8 +111,8 @@ class HabitController implements Controller {
                 habitList,
                 count,
                 page: request.body.DtoClass.page,
-                itemPerPageCnt: this.Config.itemPerPageCnt,
-                pageCount: this.Config.pageCount
+                itemPerPageCnt: ConfigClass.itemPerPageCnt,
+                pageCount: ConfigClass.pageCount
             }, '01'));
         } catch (e) {
             if (e.errorCode) {

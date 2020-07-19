@@ -8,7 +8,7 @@ import Mysql from '../../loaders/MysqlTemplate';
 import FileHandlerClass from '../../utils/file/fileHandler.class';
 import ErrorResponse from '../../utils/response/ErrorResponse';
 
-import UtilsClass from '../../utils/utils';
+import UtilsClass from '../../utils/Utils';
 import ConfigClass from '../../config/config.dto';
 import MemberStatusDtoClass from './dto/memberStatus.dto';
 
@@ -200,7 +200,7 @@ export default class HabitJoinDAO{
 
             let foot = `
                 ORDER BY hj.reg_date DESC
-                LIMIT ${(page - 1) * this.Config.itemPerPageCnt}, ${this.Config.itemPerPageCnt}
+                LIMIT ${(page - 1) * ConfigClass.itemPerPageCnt}, ${ConfigClass.itemPerPageCnt}
             `;
 
             const queryList = [

@@ -5,7 +5,7 @@ import {Container} from 'typedi';
 // import HttpException from '../exceptions/HttpException';
 import ConfigClass from '../config/config.dto';
 import {LogErrQuery} from '../query';
-import ResponseInterface from '../interfaces/response.interface';
+import ResponseInterface from '../interfaces/Response';
 
 import {getRepository} from 'typeorm';
 import {Logger} from "winston";
@@ -19,7 +19,6 @@ const dbLogMiddleware = async (nextData: ResponseInterface | Error, request: Req
     }
 
     const logger: Logger = Container.get('logger');
-    const Config: ConfigClass = Container.get('Config');
 
     // const mysql: Mysql = Container.get('mysql');
     const logErrQuery = new LogErrQuery();
@@ -30,7 +29,7 @@ const dbLogMiddleware = async (nextData: ResponseInterface | Error, request: Req
         const recordSet = await Mysql.exec(logErrQuery.create(),
                    [
                        response.statusCode,
-                       Config.server,
+                       ConfigClass.server,
                        ip,
                        request.method,
                        request.path,

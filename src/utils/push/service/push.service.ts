@@ -1,7 +1,7 @@
 import {getRepository} from 'typeorm';
 import Contents from '../../../entity/contents/contents.entity';
 import PushInterface from '../../../interfaces/push.interface';
-import Utils from '../../utils';
+import Utils from '../../Utils';
 import {NextFunction} from "index.d.ts";
 // import * as express from "./post.controller";
 // import CreatePostDto from "./post.dto";

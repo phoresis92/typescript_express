@@ -8,7 +8,7 @@ import Mysql from '../../loaders/MysqlTemplate';
 import FileHandlerClass from '../../utils/file/fileHandler.class';
 import ErrorResponse from '../../utils/response/ErrorResponse';
 
-import UtilsClass from '../../utils/utils';
+import UtilsClass from '../../utils/Utils';
 import SignupDto from '../auth/dto/signup.dto';
 import ProfileDtoClass from './dto/profile.dto';
 

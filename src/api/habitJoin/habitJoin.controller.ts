@@ -20,7 +20,7 @@ class HabitJoinController implements Controller {
     public path = '/habit';
     public router = express.Router();
 
-    private Config: ConfigClass = Container.get('Config');
+    // private Config: ConfigClass = Container.get('Config');
 
     private JwtValid: JwtValidClass;
 
@@ -163,7 +163,7 @@ class HabitJoinController implements Controller {
             let [memberList, count] = await HabitJoinService.memberListService(habitSeq, request.cookies.token, page, request.query.listType);
 
             response.send(new Response.success(request, request.params, next)
-                              .make({memberList, count, page, itemPerPageCnt: this.Config.itemPerPageCnt, pageCount:this.Config.pageCount}, '01')
+                              .make({memberList, count, page, itemPerPageCnt: ConfigClass.itemPerPageCnt, pageCount:ConfigClass.pageCount}, '01')
             );
 
         } catch (e) {

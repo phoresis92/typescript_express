@@ -1,8 +1,10 @@
 import * as express from 'express';
 import moment from 'moment';
 import {Container, Inject} from 'typedi';
+import {Logger} from 'winston';
 
 import middleware from '../../middleware';
+import ErrorResponse from '../../utils/response/ErrorResponse';
 import dto from './dto';
 import Response from '../../utils/response';
 
@@ -13,11 +15,15 @@ import HttpException from '../../exceptions/HttpException';
 
 import AuthServiceClass from './auth.service';
 
+
 class AuthController implements Controller {
     public path = '/auth';
     public router = express.Router();
 
     private JwtValid: JwtValidClass;
+
+    @Inject('logger')
+    private logger: Logger;
 
     constructor() {
         this.JwtValid = new middleware.JwtValid();
@@ -58,11 +64,15 @@ class AuthController implements Controller {
 
     private signinCtrl = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
         try {
-            const AuthService: AuthServiceClass = Container.get(AuthServiceClass);
+            // const AuthService: AuthServiceClass = Container.get(AuthServiceClass);
+            const AuthService: AuthServiceClass = new AuthServiceClass(); //Container.get(AuthServiceClass);
             let {accessToken, refreshToken, userData} = await AuthService.signinService(request.body.DtoClass);
 
             response.send(new Response.success(request, request.params, next).make({accessToken, refreshToken, userData}, '01', 'Success Sign In'));
         } catch (e) {
+            // this.logger.error(`🔥 signinCtrl:\n\t${e.message}`);
+            console.log(e instanceof ErrorResponse);
+            console.log(e);
             if (e.errorCode) {
                 response.status(e.status).send(new Response.fail(request, request.params, next).make({}, e.errorCode, e.message));
                 return;

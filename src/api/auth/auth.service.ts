@@ -7,9 +7,10 @@ import jwt from 'jsonwebtoken';
 import redis, {RedisClient, print} from 'redis';
 import {Container, Service, Inject} from 'typedi';
 import {promisify} from 'util';
+import {Logger} from 'winston';
 import TokenInterface from '../../interfaces/token.interface';
 
-import UtilsClass from '../../utils/utils';
+import UtilsClass from '../../utils/Utils';
 
 import ConfigClass from '../../config/config.dto';
 
@@ -25,129 +26,133 @@ import ErrorResponse from "../../utils/response/ErrorResponse";
 export default class AuthService {
 
     @Inject()
-    private Config: ConfigClass;
-    @Inject()
     private AuthDAO: AuthDAOClass;
     @Inject('redis')
     private Redis: RedisClient;
 
+    @Inject('logger')
+    private logger: Logger;
+
     constructor() {};
 
     public signinService = async (SigninDto: SigninDtoClass): Promise<any> => {
+        console.log('signinService');
 
-        /** UserLogin Check **/
-        const loginData = await this.AuthDAO.getUserLoginById(SigninDto.loginId);
-        {
-            if (!loginData) {
+            /** UserLogin Check **/
+            const loginData = await this.AuthDAO.getUserLoginById(SigninDto.loginId);
+            {
                 throw new ErrorResponse(404, "loginId not exist", '01');
-            }
-
-            if (SigninDto.joinType === 'NORMAL') {
-                if(loginData.password === null){
-                    throw new ErrorResponse(400, "In NORMAL type must have password", '02');
-                    return;
+                if (!loginData) {
                 }
-                const validPassword = await argon2.verify(loginData.password, SigninDto.password);
-                if (!validPassword) {
-                    throw new ErrorResponse(401, "password mismatch", '02');
-                    return;
-                }
-            } else {
-                const validToken = await new SnsAuthCheck(SigninDto.joinType).authorizeToken(SigninDto.loginId, SigninDto.password);
-                if (!validToken) {
-                    throw new ErrorResponse(401, `Invalid SNS token`, '02');
-                    return;
-                }
-            }
-        }
 
-        /** User Check **/
-        const userData = await this.AuthDAO.getUserByUserId(loginData.user_id);
-        {
-            if(!userData){
-                throw new ErrorResponse(404, `Not exist userData`, '03');
-                return;
-            }
-            if(userData.user_status !== 50){
-                throw new ErrorResponse(403, `Deleted or Blocked user`, '04');
-                return;
-            }
-
-        }
-
-        /** Session Check **/
-        let sessionData: any = await this.AuthDAO.getSessionBySessionId(SigninDto.sessionId);
-        {
-            if(sessionData){
-                const {updateSessionResult, updateLoginResult} = await this.AuthDAO.updateLastLoginDate(SigninDto.sessionId, SigninDto.pushKey, loginData.user_id);
-
-            }else{
-                const loginGroup: string = (SigninDto.osType === 'AOD' || SigninDto.osType === 'IOS' ? 'MOBILE' : (SigninDto.osType === 'WEB' ? 'WEB' : 'ETC'));
-                const anotherSession = await this.AuthDAO.getSessionByLoginGroup(loginData.user_id, loginGroup);
-
-                if(anotherSession && SigninDto.loginForce === 0){
-                    throw new ErrorResponse(401, `Another session exist`, '05');
-                    return;
-                }else if(anotherSession){
-                    const deleteResult = await this.AuthDAO.deleteSessionByUserIdAndLoginGroup(loginData.user_id, loginGroup);
-                    if(deleteResult.affectedRows === 0){
-                        throw new ErrorResponse(500, `[DB] DELETE SESSION`, '06');
+                if (SigninDto.joinType === 'NORMAL') {
+                    if(loginData.password === null){
+                        throw new ErrorResponse(400, "In NORMAL type must have password", '02');
+                        return;
+                    }
+                    const validPassword = await argon2.verify(loginData.password, SigninDto.password);
+                    if (!validPassword) {
+                        throw new ErrorResponse(401, "password mismatch", '02');
+                        return;
+                    }
+                } else {
+                    const validToken = await new SnsAuthCheck(SigninDto.joinType).authorizeToken(SigninDto.loginId, SigninDto.password);
+                    if (!validToken) {
+                        throw new ErrorResponse(401, `Invalid SNS token`, '02');
                         return;
                     }
                 }
-
-                //TODO Set default pushSet
-                sessionData = {
-                    pushSet: 31,
-                    session_id: SigninDto.sessionId
-                };
-
             }
-        }
 
-        const insertSessionRecord = await this.AuthDAO.insertSession(SigninDto.sessionId, loginData.user_id, SigninDto.osType, SigninDto.osVersion, SigninDto.appVersion, SigninDto.pushKey);
-        // if(insertSessionRecord.affectedRows === 0){
-        //     throw new ErrorResponse(500, `DB ERROR (insert session)`, '07');
-        //     return;
-        // }
-        /** Token **/
-        {
-            const accessToken: string = this.generateToken({
-                uuid: userData.uuid.toString(),
-                sessionId: sessionData.session_id
-            }, '20m');
-            const refreshToken: string = this.generateToken({sessionId: sessionData.session_id}, '1w');
-
-            // const hmsetSync = promisify(this.Redis.hmset).bind(this.Redis);
-            // const expireSync = promisify(this.Redis.expire).bind(this.Redis);
-            // const hdelSync = promisify(this.Redis.hdel).bind(this.Redis);
-
-            const hmsetSync = promisify(this.Redis.hmset).bind(this.Redis);
-            // @ts-ignore
-            const hmsetResult = await hmsetSync(sessionData.session_id, {
-                refreshToken: refreshToken,
-                userId: loginData.user_id
-            });
-
-            const expireSync = promisify(this.Redis.expire).bind(this.Redis);
-            let expireResult = await expireSync(sessionData.session_id, 60 * 60 * 24 * 7);
-
-            if(hmsetResult !== 'OK' || expireResult !== 1){
-                const hdelSync = promisify(this.Redis.hdel).bind(this.Redis);
-                // @ts-ignore
-                await hdelSync(sessionData.session_id, 'userId', 'refreshToken');
-
-                throw new ErrorResponse(500, '[REDIS] Set refreshToken Error', '07');
-                return;
+            /** User Check **/
+            const userData = await this.AuthDAO.getUserByUserId(loginData.user_id);
+            {
+                if(!userData){
+                    throw new ErrorResponse(404, `Not exist userData`, '03');
+                    return;
+                }
+                if(userData.user_status !== 50){
+                    throw new ErrorResponse(403, `Deleted or Blocked user`, '04');
+                    return;
+                }
 
             }
 
-            // if (data.osType === 'WEB') {
-            //     req.yar.set('TOKEN', token);
+            /** Session Check **/
+            let sessionData: any = await this.AuthDAO.getSessionBySessionId(SigninDto.sessionId);
+            {
+                if(sessionData){
+                    const {updateSessionResult, updateLoginResult} = await this.AuthDAO.updateLastLoginDate(SigninDto.sessionId, SigninDto.pushKey, loginData.user_id);
+
+                }else{
+                    const loginGroup: string = (SigninDto.osType === 'AOD' || SigninDto.osType === 'IOS' ? 'MOBILE' : (SigninDto.osType === 'WEB' ? 'WEB' : 'ETC'));
+                    const anotherSession = await this.AuthDAO.getSessionByLoginGroup(loginData.user_id, loginGroup);
+
+                    if(anotherSession && SigninDto.loginForce === 0){
+                        throw new ErrorResponse(401, `Another session exist`, '05');
+                        return;
+                    }else if(anotherSession){
+                        const deleteResult = await this.AuthDAO.deleteSessionByUserIdAndLoginGroup(loginData.user_id, loginGroup);
+                        if(deleteResult.affectedRows === 0){
+                            throw new ErrorResponse(500, `[DB] DELETE SESSION`, '06');
+                            return;
+                        }
+                    }
+
+                    //TODO Set default pushSet
+                    sessionData = {
+                        pushSet: 31,
+                        session_id: SigninDto.sessionId
+                    };
+
+                }
+            }
+
+            const insertSessionRecord = await this.AuthDAO.insertSession(SigninDto.sessionId, loginData.user_id, SigninDto.osType, SigninDto.osVersion, SigninDto.appVersion, SigninDto.pushKey);
+            // if(insertSessionRecord.affectedRows === 0){
+            //     throw new ErrorResponse(500, `DB ERROR (insert session)`, '07');
+            //     return;
             // }
+            /** Token **/
+            {
+                const accessToken: string = this.generateToken({
+                    uuid: userData.uuid.toString(),
+                    sessionId: sessionData.session_id
+                }, '20m');
+                const refreshToken: string = this.generateToken({sessionId: sessionData.session_id}, '1w');
 
-            return {accessToken, refreshToken, userData};
-        }
+                // const hmsetSync = promisify(this.Redis.hmset).bind(this.Redis);
+                // const expireSync = promisify(this.Redis.expire).bind(this.Redis);
+                // const hdelSync = promisify(this.Redis.hdel).bind(this.Redis);
+
+                const hmsetSync = promisify(this.Redis.hmset).bind(this.Redis);
+                // @ts-ignore
+                const hmsetResult = await hmsetSync(sessionData.session_id, {
+                    refreshToken: refreshToken,
+                    userId: loginData.user_id
+                });
+
+                const expireSync = promisify(this.Redis.expire).bind(this.Redis);
+                let expireResult = await expireSync(sessionData.session_id, 60 * 60 * 24 * 7);
+
+                if(hmsetResult !== 'OK' || expireResult !== 1){
+                    const hdelSync = promisify(this.Redis.hdel).bind(this.Redis);
+                    // @ts-ignore
+                    await hdelSync(sessionData.session_id, 'userId', 'refreshToken');
+
+                    throw new ErrorResponse(500, '[REDIS] Set refreshToken Error', '07');
+                    return;
+
+                }
+
+                // if (data.osType === 'WEB') {
+                //     req.yar.set('TOKEN', token);
+                // }
+
+                return {accessToken, refreshToken, userData};
+            }
+
+            // this.logger.error(`🔥 auth.servicesigninService:\n\t${err.message}`);
 
     };
 
@@ -235,7 +240,7 @@ export default class AuthService {
 
         return jwt.sign(
             payloadObj,
-            this.Config.jwtSecret,
+            ConfigClass.jwtSecret,
             {algorithm: 'HS256', expiresIn: expiresIn}
         );
 

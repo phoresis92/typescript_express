@@ -1,4 +1,4 @@
-import Utils from './utils';
+import Utils from './Utils';
 import Response from './response';
 
 export {

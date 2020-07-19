@@ -20,7 +20,6 @@ import ErrorResponse from '../utils/response/ErrorResponse';
 
 class JwtValid {
 
-    private Config: ConfigClass = Container.get('Config');
     private Redis: RedisClient = Container.get('redis');
 
     constructor(){
@@ -76,7 +75,7 @@ class JwtValid {
 
     private jwtValidCheck (req: Request) {
         try {
-            jwt.verify(this.getTokenFromHeader(req), this.Config.jwtSecret);
+            jwt.verify(this.getTokenFromHeader(req), ConfigClass.jwtSecret);
 
             return null;
 

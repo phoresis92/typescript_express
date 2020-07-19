@@ -8,7 +8,7 @@ import Mysql from '../../loaders/MysqlTemplate';
 import FileHandlerClass from '../../utils/file/fileHandler.class';
 import ErrorResponse from '../../utils/response/ErrorResponse';
 
-import UtilsClass from '../../utils/utils';
+import UtilsClass from '../../utils/Utils';
 import ConfigClass from '../../config/config.dto';
 import HabitListDto from './dto/habitList.dto';
 import HabitDtoClass from './dto/makeHabit.dto';
@@ -18,8 +18,6 @@ export default class AuthDAO{
 
     @Inject('utils')
     private Utils: UtilsClass;
-    @Inject()
-    private Config: ConfigClass;
     @Inject()
     private FileHandle: FileHandlerClass;
 
@@ -168,7 +166,7 @@ export default class AuthDAO{
 
             let foot = `
                 ORDER BY h.reg_date DESC
-                LIMIT ${(HabitListDto.page - 1) * this.Config.itemPerPageCnt}, ${this.Config.itemPerPageCnt}
+                LIMIT ${(HabitListDto.page - 1) * ConfigClass.itemPerPageCnt}, ${ConfigClass.itemPerPageCnt}
             `;
 
             const queryList = [

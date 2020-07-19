@@ -1,12 +1,11 @@
 import {NextFunction, Request} from 'express';
 import { Container } from 'typedi';
-import ResponseInterface from '../../interfaces/response.interface';
-import Config from '../../config/config.dto'
+import Response from '../../interfaces/Response';
+import ConfigClass from '../../config/config.dto'
+import LoggerClass from '../logger';
 
-class SuccessResponse implements ResponseInterface{
-    private logger = Container.get('logger');
-    private Config: Config = Container.get('Config');
-    // private config: Config = Container.get('config');
+class SuccessResponse implements Response{
+    private logger = LoggerClass.getInstance();
 
     // public request: Request;
     // public params: object;
@@ -35,7 +34,7 @@ class SuccessResponse implements ResponseInterface{
             result: true,
             path: `${this.request.path}/${this.responseCode}`,
             resultData: this.resultData,
-            message: (this.Config.nodeEnv == 'development' ? this.message : null)
+            message: (ConfigClass.nodeEnv == 'development' ? this.message : null)
         }
     }
 

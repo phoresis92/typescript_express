@@ -1,10 +1,5 @@
 import path from 'path';
-import validateEnv from '../loaders/validateEnv';
-
-/**
- * ValidateEnv
- */
-validateEnv();
+import {Container} from 'typedi';
 
 
 const envFound = require('dotenv').config();
@@ -15,68 +10,63 @@ if (!envFound) {
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
-export enum SERVERTYPE {
-    WAS = 'WAS',
-    PTMS = 'PTMS',
-    DFS = 'DFS',
-    ERROR = 'ERROR'
-}
-
 export default class Config {
+
+    private constructor() {
+    }
+
     /**
      * Service Info
      */
-    public server: string = process.env.SERVER!;
-    public serverType = SERVERTYPE;
-    public serviceName: string = process.env.SERVICE_NAME!;
+    public static readonly server: string = Container.get('server');
+    public static serverId: string;
+    public static readonly serviceName: string = process.env.SERVICE_NAME!;
 
     /**
      * Node Environment
      */
-    public nodeEnv: string = process.env.NODE_ENV!;
+    public static nodeEnv: string = process.env.NODE_ENV!;
 
     /**
      * Mysql Environment
      */
-    public mysqlHost: string = process.env.RDB_HOST!;
-    public mysqlPort: number = Number(process.env.RDB_PORT);
-    public mysqlUser: string = process.env.RDB_USER!;
-    public mysqlPassword: string = process.env.RDB_PASSWORD!;
-    public mysqlDb: string = process.env.RDB_DB!;
-    public mysqlDateStrings: boolean = Boolean(process.env.RDB_DATE_STRINGS);
-    public mysqlCharSet: string = process.env.RDB_CHAR_SET!;
+    public static readonly mysqlHost: string = process.env.RDB_HOST!;
+    public static readonly mysqlPort: number = Number(process.env.RDB_PORT);
+    public static readonly mysqlUser: string = process.env.RDB_USER!;
+    public static readonly mysqlPassword: string = process.env.RDB_PASSWORD!;
+    public static readonly mysqlDb: string = process.env.RDB_DB!;
+    public static readonly mysqlDateStrings: boolean = Boolean(process.env.RDB_DATE_STRINGS);
+    public static readonly mysqlCharSet: string = process.env.RDB_CHAR_SET!;
 
     /**
      * Your favorite port
      */
-    public wasPort: number =  Number(process.env.WAS_PORT);
-    public ptmsPort: number = Number(process.env.PTMS_PORT);
-    public dfsPort: number = Number(process.env.DFS_PORT);
+    public static port: number = Number(process.env.WAS_PORT);
 
     /**
      * File upload path
      */
-    public basePath: string = process.env.BASE_PATH!;
-    public uploadPath: string = process.env.UPLOAD_PATH!;
-    public ffmpegPath: string = path.join(__dirname, '../..', process.env.FFMPEG_PATH!);
+    public static basePath: string = process.env.BASE_PATH!;
+    public static uploadPath: string = process.env.UPLOAD_PATH!;
+    public static ffmpegPath: string = path.join(__dirname, '../..', process.env.FFMPEG_PATH!);
 
     /**
      * Facebook develop id for Auth
      */
-    public facebookId: string = process.env.APIKEY_FB_ID!;
-    public facebookSecret: string = process.env.APIKEY_FB_SECRET!;
+    public static facebookId: string = process.env.APIKEY_FB_ID!;
+    public static facebookSecret: string = process.env.APIKEY_FB_SECRET!;
 
     /**
      * Redis Config
      */
-    public redisPort: number = parseInt(process.env.REDIS_PORT!) | 6379;
-    public redisHost: string = process.env.REDIS_HOST!;
+    public static redisPort: number = parseInt(process.env.REDIS_PORT!) | 6379;
+    public static redisHost: string = process.env.REDIS_HOST!;
 
     /**
      * Paging Config
      */
-    public itemPerPageCnt: number = parseInt(process.env.ITME_PER_PAGE_COUNT!) | 10;
-    public pageCount: number = parseInt(process.env.PAGE_COUNT!) | 10;
+    public static itemPerPageCnt: number = parseInt(process.env.ITME_PER_PAGE_COUNT!) | 10;
+    public static pageCount: number = parseInt(process.env.PAGE_COUNT!) | 10;
 
     /**
      * That long string from mlab
@@ -86,7 +76,7 @@ export default class Config {
     /**
      * Your secret sauce
      */
-    public jwtSecret: string = process.env.JWT_SECRET!;
+    public static jwtSecret: string = process.env.JWT_SECRET!;
 
     /**
      * Used by winston logger
@@ -127,8 +117,8 @@ export default class Config {
     /**
      * API configs
      */
-    public api: {prefix: string} =  {
-        prefix: '/api',
+    public static api: {prefix: string} =  {
+        prefix: process.env.API_PREFIX || '/api',
     };
     /**
      * Mailgun email credentials

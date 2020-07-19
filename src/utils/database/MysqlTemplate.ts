@@ -1,69 +1,177 @@
 
-import {ConnectionConfig, createPool, MysqlError, Connection} from 'mysql';
+import {ConnectionConfig, createPool, MysqlError, Connection, Pool, PoolConnection, escape} from 'mysql';
 import moment from 'moment';
 import {Inject} from 'typedi';
+import {Logger} from 'winston';
 import ConfigClass from '../../config/config.dto';
+import {promisify} from 'util';
 
-class MysqlTemplate {
+export default class MysqlTemplate {
 
     @Inject()
-    private Config: ConfigClass;
+    private logger: Logger;
 
-    private pool: mysql.Pool;
+    private pool1: Pool;
+    private pool2: Pool;
 
-    constructor(){
+    public static escape = escape;
+
+    private static instance: MysqlTemplate;
+
+    private constructor(){
         this.createPool();
+    }
+
+    public static getInstance (): MysqlTemplate{
+        if(!this.instance){
+            this.instance = new MysqlTemplate();
+        }
+
+        return this.instance;
     }
 
     private createPool(){
 
-        const dbConfig: ConnectionConfig = {
-            host: this.Config.mysqlHost,
-            port: this.Config.mysqlPort,
-            user: this.Config.mysqlUser,
-            password: this.Config.mysqlPassword,
-            database: this.Config.mysqlDb,
-            dateStrings: this.Config.mysqlDateStrings,
-            charset: this.Config.mysqlCharSet,
+        const dbConfig1: ConnectionConfig = {
+            host: ConfigClass.mysqlHost,
+            port: ConfigClass.mysqlPort,
+            user: ConfigClass.mysqlUser,
+            password: ConfigClass.mysqlPassword,
+            database: ConfigClass.mysqlDb,
+            dateStrings: ConfigClass.mysqlDateStrings,
+            charset: ConfigClass.mysqlCharSet,
             multipleStatements: true
         };
 
-        this.pool = createPool(dbConfig);
+        const dbConfig2: ConnectionConfig = {
+            host: ConfigClass.mysqlHost,
+            port: ConfigClass.mysqlPort,
+            user: ConfigClass.mysqlUser,
+            password: ConfigClass.mysqlPassword,
+            database: ConfigClass.mysqlDb,
+            dateStrings: ConfigClass.mysqlDateStrings,
+            charset: ConfigClass.mysqlCharSet,
+        };
+
+        this.pool1 = createPool(dbConfig1);
+        this.pool2 = createPool(dbConfig2);
 
     }
 
-    public get (queryList: Array<string>){
-        if(!queryList){
-            return [];
-        }
+
+
+
+
+    /*exports.get = function (query, next) {
+        return new Promise((resolve, reject) => {
+            if (!query) {
+                resolve([]);
+            }
+            try {
+                var strQuery = query.join(';');
+
+                pool.getConnection(function (err, conn) {
+                    if (err) {
+                        console.log('getConn : ', query);
+                        //logger.error("poolConnect:"+err);
+                        try {
+                            conn.release();
+                        } catch (e) {
+                        } //logger.error("poolConnect conn.release:"+e); }
+                        throw err;
+                    }
+                    conn.query(strQuery, function (err, rows) {
+                        if (err) {
+                            console.log('queryErr : ', query);
+                            try {
+                                conn.release();
+                            } catch (e) {
+                            } //logger.error("poolClose:"+e); }
+                            throw err;
+                        } else {
+                            try {
+                                conn.release();
+                            } catch (e) {
+                            } //logger.error("poolClose:"+e); }
+                            if (query.length === 1) {
+                                rows = [rows]
+                            }
+                            resolve(rows)
+                        }
+                    });
+                });
+            } catch (e) {
+                console.log(query);
+                reject(e)
+            }
+
+        })
+
+    };*/
+
+
+    public query = async (query: string, args?: Array<any>): Promise<any> => {
 
         try{
-            const queryString = queryList.join(';');
 
-            pool.getConnection((err: MysqlError, conn: Connection)=>{
-                if(err){
-                    throw err;
-                    try {
-                        conn.end();
-                    }catch (e) {
-                    }
-                    return;
-                }
+            const getConnSync = promisify(this.pool1.getConnection).bind(this.pool1);
+            const conn = await getConnSync();
 
-                conn.query
+            try {
 
-            })
+                const querySync = promisify(conn.query).bind(conn);
+                // @ts-ignore
+                const recordSet = await querySync(query, args);
+
+                return recordSet;
+
+            }catch (err) {
+
+            }finally {
+                conn.release();
+            }
+
+
+        }catch(err){
+            this.logger.error(`MysqlTemplate.query:\n\t${err.message}`);
+            throw err;
+        }
+
+    };
+
+    public getConn = async (): Promise<any> => {
+
+        try{
+
+            const getConnSync = promisify(this.pool1.getConnection).bind(this.pool1);
+            const conn = await getConnSync();
+
+            await conn.beginTransaction();
+
+            try {
+
+                const querySync = promisify(conn.query).bind(conn);
+                return [conn, querySync];
+
+            }catch (err) {
+                throw err;
+            }finally {
+                // conn.release();
+            }
+
 
         }catch(err){
 
         }
 
-    }
+    };
+
 }
 
 
 
 
+/*
 
 
 
@@ -327,3 +435,4 @@ exports.getConnTransaction = function () {
         }
     })
 }
+*/
