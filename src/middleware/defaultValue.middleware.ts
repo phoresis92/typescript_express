@@ -3,7 +3,7 @@ import HttpException from '../exceptions/HttpException';
 import FailResponse from '../utils/response/FailResponse';
 import SuccessResponse from '../utils/response/SuccessResponse';
 
-class defaultValueMiddleware {
+class DefaultValueMiddleware {
 
     private dateArr: string[];
     private numberArr: string[];
@@ -47,63 +47,41 @@ class defaultValueMiddleware {
     public handle (): express.RequestHandler{
         return (req, res, next) => {
 
+            let target;
             if(req.method === 'GET'){
-                for (let key of this.dateArr) {
-                    req.query[key] = new Date(req.query[key]);
-                }
-                for (let key of this.numberArr) {
-                    req.query[key] = parseInt(req.query[key]);
-                }
-                for (let key of this.zeroArr) {
-                    if (req.query[key] === '') {
-                        req.query[key] = 0;
-                    }else{
-                        req.query[key] = parseInt(req.query[key]);
-                    }
-                }
-                for (let key of this.oneArr) {
-                    if (req.query[key] === '') {
-                        req.query[key] = 1;
-                    }else{
-                        req.query[key] = parseInt(req.query[key]);
-                    }
-                }
-                for (let key of this.makeArr) {
-                    if (typeof req.query[key] === 'string') {
-                        const rowArr = (req.query[key]).split(',');
-                        req.query[key] = rowArr.filter((val: string) => val !== '');
-                    }
-                }
-
-            }else {
-                for (let key of this.dateArr) {
-                    req.body[key] = new Date(req.body[key]);
-                }
-                for (let key of this.numberArr) {
-                    req.body[key] = parseInt(req.body[key]);
-                }
-                for (let key of this.zeroArr) {
-                    if (req.body[key] === '' || req.body[key] === undefined) {
-                        req.body[key] = 0;
-                    }else{
-                        req.body[key] = parseInt(req.body[key]);
-                    }
-                }
-                for (let key of this.oneArr) {
-                    if (req.body[key] === '' || req.body[key] === undefined) {
-                        req.body[key] = 1;
-                    }else{
-                        req.body[key] = parseInt(req.body[key]);
-                    }
-                }
-                for (let key of this.makeArr) {
-                    if (typeof req.body[key] === 'string') {
-                        const rowArr = (req.body[key]).split(',');
-                        req.body[key] = rowArr.filter((val: string) => val !== '');
-                    }
-                }
-
+                target = req.query;
+            }else{
+                target = req.body;
             }
+
+
+            for (let key of this.dateArr) {
+                target[key] = new Date(target[key]);
+            }
+            for (let key of this.numberArr) {
+                target[key] = parseInt(target[key]);
+            }
+            for (let key of this.zeroArr) {
+                if (target[key] === '' || target[key] === undefined) {
+                    target[key] = 0;
+                }else{
+                    target[key] = parseInt(target[key]);
+                }
+            }
+            for (let key of this.oneArr) {
+                if (target[key] === '' || target[key] === undefined) {
+                    target[key] = 1;
+                }else{
+                    target[key] = parseInt(target[key]);
+                }
+            }
+            for (let key of this.makeArr) {
+                if (typeof target[key] === 'string') {
+                    const rowArr = (target[key]).split(',');
+                    target[key] = rowArr.filter((val: string) => val !== '');
+                }
+            }
+
 
             next();
 
@@ -111,4 +89,4 @@ class defaultValueMiddleware {
     }
 }
 
-export default defaultValueMiddleware;
+export default DefaultValueMiddleware;

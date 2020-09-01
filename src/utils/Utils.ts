@@ -1,9 +1,9 @@
 import * as uuid from 'uuid'
 
 export default class Utils {
-    constructor(){};
+    private constructor(){};
 
-    public makeArray (toArr: string, splitChar: string): string[] {
+    public static makeArray (toArr: string, splitChar: string): string[] {
         let arr = toArr.split(splitChar);
         arr.filter((val, idx)=>{
             return val !== '';
@@ -12,7 +12,7 @@ export default class Utils {
         return arr;
     }
 
-    public makeUserId (){
+    public static makeUserId (){
         const token = uuid.v4().split('-');
         return token[2] + token[1] + token[0] + token[3] + token[4]
     }

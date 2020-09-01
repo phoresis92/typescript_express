@@ -20,8 +20,6 @@ import sql from 'mysql';
 export default class FileService {
 
     @Inject()
-    private Config: ConfigClass;
-    @Inject()
     private FileDAO: FileDAOClass;
     @Inject()
     private FileHandler: FileHandlerClass;
@@ -40,7 +38,7 @@ export default class FileService {
             return returnObj;
         }
 
-        let baseRoot: string = `${this.Config.basePath}${this.Config.uploadPath}`;
+        let baseRoot: string = `${ConfigClass.basePath}${ConfigClass.uploadPath}`;
         let path: string = `/${FileDto.filePath}`;
         let fileName: string = '';
         const originName: string = FileDto.fileData.originalname;
@@ -145,7 +143,7 @@ export default class FileService {
 
         return new Promise(async (resolve, reject) => {
 
-            let baseRoot: string = `${this.Config.basePath}${this.Config.uploadPath}`;
+            let baseRoot: string = `${ConfigClass.basePath}${ConfigClass.uploadPath}`;
             let path: string = `/${FileDto.filePath}`;
             let fileName: string = '';
             const originName: string = FileDto.fileData.originalname;

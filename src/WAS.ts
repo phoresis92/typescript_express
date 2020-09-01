@@ -7,7 +7,7 @@ Container.set('server', SERVERTYPE.WAS);
 
 import App from './app';
 
-// import VersionController from './api/version/version.controller';
+import VersionController from './api/version/version.controller';
 import AuthController from './api/auth/auth.controller';
 import HabitController from './api/habit/habit.controller';
 import UserController from './api/user/user.controller';
@@ -26,7 +26,7 @@ import LoggerClass from './utils/logger';
 
         const app = new App(
             [
-                // new VersionController(),
+                new VersionController(),
                 new AuthController(),
                 new HabitController(),
                 new UserController(),
@@ -37,7 +37,7 @@ import LoggerClass from './utils/logger';
         app.listen();
 
     }catch (err) {
-        logger.error(`🔥 Error on WAS:\n\t${err.message}`);
+        logger.error(`🔥 Error on ${Container.get('server')}:\n\t${err.message}`);
         process.exit(1);
     }
 

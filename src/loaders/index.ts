@@ -13,7 +13,7 @@ import {Container} from 'typedi';
 
 export default async () => {
 
-    let logger: Logger = LoggerClass.getInstance();
+    let logger: Logger; // = LoggerClass.getInstance();
 
     try {
 
@@ -32,6 +32,8 @@ export default async () => {
                                                // whateverModel
                                            ],
                                        }*/)
+
+        logger = Container.get('logger');
 
         logger.info('✌️ Dependency Injector loaded');
 
@@ -62,6 +64,8 @@ export default async () => {
         ConfigClass.serverId = serverInfo.server_id;
 
         Object.freeze(ConfigClass);
+
+        logger.info('✌️ RDB loaded');
 
         /**
          * When you use RDB

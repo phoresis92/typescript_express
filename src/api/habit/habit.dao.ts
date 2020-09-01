@@ -5,6 +5,7 @@ import mysql from 'mysql';
 import TokenInterface from '../../interfaces/token.interface';
 
 import Mysql from '../../loaders/MysqlTemplate';
+import MysqlTemplate from '../../utils/database/MysqlTemplate';
 import FileHandlerClass from '../../utils/file/fileHandler.class';
 import ErrorResponse from '../../utils/response/ErrorResponse';
 
@@ -21,11 +22,14 @@ export default class AuthDAO{
     @Inject()
     private FileHandle: FileHandlerClass;
 
+    @Inject('mysql')
+    private mysqlTemp: MysqlTemplate;
+
     constructor(){}
 
     public async insertRoom (HabitDto: HabitDtoClass, token: TokenInterface): Promise<any> {
 
-        const [conn, querySync] = await Mysql.getConn();
+        const [conn, querySync] = await this.mysqlTemp.getConn();
 
         try{
 
@@ -91,28 +95,28 @@ export default class AuthDAO{
             if(HabitDto.sampleFileSeq !== 0){
                 const updateSampleFile = await querySync(query, ['HABIT_SAMPLE', insertHabit.insertId, HabitDto.sampleFileSeq]);
 
-                if(updateSampleFile.affectedRows === 0){
-                    conn.rollback();
-                    throw new ErrorResponse(500, '[DB] Update Sample File', '500');
-                    return;
-                }
+                // if(updateSampleFile.affectedRows === 0){
+                //     conn.rollback();
+                //     throw new ErrorResponse(500, '[DB] Update Sample File', '500');
+                //     return;
+                // }
 
             }
 
             if(HabitDto.profileFileSeq !== 0){
                 const updateProfileFile = await querySync(query, ['HABIT', insertHabit.insertId, HabitDto.profileFileSeq]);
 
-                if(updateProfileFile.affectedRows === 0){
-                    conn.rollback();
-                    throw new ErrorResponse(500, '[DB] Update Profile File', '500');
-                    return;
-                }
+                // if(updateProfileFile.affectedRows === 0){
+                //     conn.rollback();
+                //     throw new ErrorResponse(500, '[DB] Update Profile File', '500');
+                //     return;
+                // }
 
             }
 
             conn.commit();
 
-            return true;
+            return insertHabit.insertId;
 
         }catch (err) {
             console.log(err)
@@ -192,7 +196,7 @@ export default class AuthDAO{
 
     public async getRoomBySeq (habitSeq: number, token: TokenInterface): Promise<any> {
 
-        const [conn, querySync] = await Mysql.getConn();
+        const [conn, querySync] = await this.mysqlTemp.getConn();
 
         try{
 
@@ -420,7 +424,7 @@ export default class AuthDAO{
                 AND hc.habit_category_seq = ?
             `;
 
-        const recordSet = await Mysql.exec(query, [categorySeq]);
+        const recordSet = await this.mysqlTemp.query(query, [categorySeq]);
 
         return recordSet[0];
 

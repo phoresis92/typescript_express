@@ -6,7 +6,6 @@ import MysqlTemplate from '../utils/database/MysqlTemplate';
 import FileHandler from '../utils/file/fileHandler.class';
 
 import LoggerClass from '../utils/logger';
-import { Utils } from '../utils';
 
 // import config from '../config/index.ts';
 
@@ -21,7 +20,7 @@ export default (/*{ /!*mongoConnection*!/ models }: { /!*mongoConnection;*!/ mod
       Container.set(m.name, m.model);
     });*/
 
-    Container.set('utils', new Utils());
+    // Container.set('utils', new Utils());
     Container.set('logger', logger);
     Container.set('mysql', MysqlTemplate.getInstance());
     Container.set('FileHandler', new FileHandler());

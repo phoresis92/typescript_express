@@ -30,13 +30,13 @@ class HabitController implements Controller {
 
     private initializeRoutes() {
         this.router
-            .post(`/habit`
+            .post(`${this.path}`
                 , this.JwtValid.decodeToken()
                 , new middleware.defaultValue()
                       .setDate(['startDate', 'endDate'])
                       .setNumber(['habitCategory', 'maxJoinCnt'])
-                      .setDefault0(['profileFileSeq', 'sampleFileSeq', 'habitSeq'])
-                      // .setDefault1([])
+                      .setDefault0(['profileFileSeq', 'sampleFileSeq'])
+                      .setDefault1(['habitSeq'])
                       .makeArray(['certType', 'pictureType'])
                       .handle()
                 , middleware.validation(dto.makeHabit, false)
@@ -88,15 +88,16 @@ class HabitController implements Controller {
     private makeRoomCtrl = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
         try {
             const HabitService: HabitServiceClass = Container.get(HabitServiceClass);
-            let result = await HabitService.makeRoomService(request.body.DtoClass, request.cookies.token);
+            let insertId = await HabitService.makeRoomService(request.body.DtoClass, request.cookies.token);
 
-            response.send(new Response.success(request, request.params, next).make({}, '01', 'Success Sign In'));
+            response.send(new Response.success(request, request.params, next).make({insertId}, '01', 'Success Sign In'));
         } catch (e) {
-            if (e.errorCode) {
+            if (e instanceof ErrorResponse) {
                 response.status(e.status).send(new Response.fail(request, request.params, next).make({}, e.errorCode, e.message));
                 return;
             }
 
+            console.log(e);
             next(new HttpException(e.status, e.message, request.params));
         }
 
@@ -137,11 +138,12 @@ class HabitController implements Controller {
 
             response.send(new Response.success(request, request.params, next).make({roomData, getJoin}, '01'));
         } catch (e) {
-            if (e.errorCode) {
+            if (e instanceof ErrorResponse) {
                 response.status(e.status).send(new Response.fail(request, request.params, next).make({}, e.errorCode, e.message));
                 return;
             }
 
+            console.log(e)
             next(new HttpException(e.status, e.message, request.params));
         }
 

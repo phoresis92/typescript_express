@@ -29,27 +29,28 @@ export default class HabitService {
     constructor() {};
 
     public makeRoomService = async (HabitDto: HabitDtoClass, token: TokenInterface): Promise<any> => {
+        console.log('makeRoomService')
+        try {
 
-        /** Start,End Date Valid Check **/
-        {
-            if(!HabitDto.validDate()){
+            /** Start,End Date Valid Check **/
+            if (!HabitDto.validDate()) {
                 throw new ErrorResponse(400, 'Invalid date period', '01');
                 return;
-            };
-        }
+            }
 
-        /** Category Valid Check **/
-        {
+            /** Category Valid Check **/
             const categoryData = await this.HabitDAO.categoryValidCheck(HabitDto.habitCategory);
-            if(!categoryData){
+            if (!categoryData) {
                 throw new ErrorResponse(400, 'Invalid categorySeq', '02');
                 return;
             }
-        }
 
-        /** Insert Room **/
-        {
+            /** Insert Room **/
             return await this.HabitDAO.insertRoom(HabitDto, token);
+
+        }catch (e) {
+            // console.log(e)
+            throw e;
         }
 
     };
@@ -64,64 +65,69 @@ export default class HabitService {
     };
 
     public roomDetailService = async (habitSeq: number, token: TokenInterface): Promise<any> => {
+        try {
 
-        /** Get Room **/
-        let roomData, getJoin;
-        {
-            [roomData, getJoin] = await this.HabitDAO.getRoomBySeq(habitSeq, token);
-            if(!roomData){
-                throw new ErrorResponse(404, 'Not Exist habitSeq', '01');
-                return;
-            }
-        }
-
-        /** Room Status Check **/
-        {
-            if(roomData.habit_status === 10){
-                throw new ErrorResponse(400, 'Deleted Room', '02');
-                return;
-            }
-            if( roomData.habit_status === 20 /*&& (moment(roomData.mod_date).add(1, 'day') < moment())*/ ){
-                throw new ErrorResponse(400, 'Rejected Room', '03');
-                return;
-            }
-            // if( roomData.habit_status === 30 && (moment(roomData.start_date).add(1, 'day') < moment()) ){
-            //     throw new ErrorResponse(401, 'Pending Rejected Room', '03');
-            //     return;
-            // }
-        }
-
-        /** Valid Access Check **/
-        {
-            if(moment(roomData.start_date) < moment()){
-                if(roomData.habit_status != 50){
-                    throw new ErrorResponse(400, 'Pending Rejected Room', '04');
+            /** Get Room **/
+            let roomData, getJoin;
+            {
+                [roomData, getJoin] = await this.HabitDAO.getRoomBySeq(habitSeq, token);
+                if (!roomData) {
+                    throw new ErrorResponse(404, 'Not Exist habitSeq', '01');
                     return;
                 }
+            }
 
-                if(!getJoin){
-                    throw new ErrorResponse(401, 'Not Join This Room', '05');
+            /** Room Status Check **/
+            {
+                if (roomData.habit_status === 10) {
+                    throw new ErrorResponse(400, 'Deleted Room', '02');
                     return;
                 }
+                if (roomData.habit_status === 20 /*&& (moment(roomData.mod_date).add(1, 'day') < moment())*/) {
+                    throw new ErrorResponse(400, 'Rejected Room', '03');
+                    return;
+                }
+                // if( roomData.habit_status === 30 && (moment(roomData.start_date).add(1, 'day') < moment()) ){
+                //     throw new ErrorResponse(401, 'Pending Rejected Room', '03');
+                //     return;
+                // }
+            }
 
-                if(getJoin){
-                    if(getJoin.join_status !== 100){
-                        let message: string = 'Invalid Access';
-                        if(getJoin.join_status === 70){
-                            message = 'Withdraw User'
-                        }else if(getJoin.join_status === 30){
-                            message = 'Rejected User'
-                        }
-                        throw new ErrorResponse(401, message, '06');
+            /** Valid Access Check **/
+            {
+                if (moment(roomData.start_date) < moment()) {
+                    if (roomData.habit_status != 50) {
+                        throw new ErrorResponse(400, 'Pending Rejected Room', '04');
                         return;
                     }
+
+                    if (!getJoin) {
+                        throw new ErrorResponse(401, 'Not Join This Room', '05');
+                        return;
+                    }
+
+                    if (getJoin) {
+                        if (getJoin.join_status !== 100) {
+                            let message: string = 'Invalid Access';
+                            if (getJoin.join_status === 70) {
+                                message = 'Withdraw User'
+                            } else if (getJoin.join_status === 30) {
+                                message = 'Rejected User'
+                            }
+                            throw new ErrorResponse(401, message, '06');
+                            return;
+                        }
+                    }
+
                 }
-
             }
+
+            return [roomData, getJoin];
+
+        }catch (e) {
+            console.log(e);
+            throw e;
         }
-
-        return [roomData, getJoin];
-
     };
 
     public updateRoomService = async (HabitDto: HabitDtoClass, token: TokenInterface): Promise<any> => {

@@ -28,7 +28,7 @@ class FileController implements Controller {
     public path = '/file';
     public router = Router();
 
-    private Config: ConfigClass = Container.get('Config');
+    // private Config: ConfigClass = Container.get('Config');
     private FileHandler: FileHandleClass = Container.get('FileHandler');
 
     private uploads = multer({
@@ -76,7 +76,7 @@ class FileController implements Controller {
             const fileDate: string = decodeURI(request.params.fileDate);
             const fileName: string = decodeURI(request.params.fileName);
 
-            const path = `${this.Config.basePath}${this.Config.uploadPath}/${filePath}/${fileDate}/${fileName}`;
+            const path = `${ConfigClass.basePath}${ConfigClass.uploadPath}/${filePath}/${fileDate}/${fileName}`;
 
             const stats = await this.FileHandler.getStat(path);
 

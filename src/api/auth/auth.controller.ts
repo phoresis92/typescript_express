@@ -70,14 +70,12 @@ class AuthController implements Controller {
 
             response.send(new Response.success(request, request.params, next).make({accessToken, refreshToken, userData}, '01', 'Success Sign In'));
         } catch (e) {
-            // this.logger.error(`🔥 signinCtrl:\n\t${e.message}`);
-            console.log(e instanceof ErrorResponse);
-            console.log(e);
-            if (e.errorCode) {
+            if (e instanceof ErrorResponse) {
                 response.status(e.status).send(new Response.fail(request, request.params, next).make({}, e.errorCode, e.message));
                 return;
             }
 
+            console.log(e)
             next(new HttpException(e.status, e.message, request.params));
         }
 

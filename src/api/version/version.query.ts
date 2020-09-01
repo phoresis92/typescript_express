@@ -1,10 +1,5 @@
-import {Inject} from 'typedi';
-import Mysql from 'mysql';
 
 export default class versionQuery{
-    @Inject('mysql')
-    private mysql: Mysql;
-
     constructor(){}
 
     public recent = () => {

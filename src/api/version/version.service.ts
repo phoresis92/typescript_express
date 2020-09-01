@@ -1,13 +1,14 @@
 import {getRepository} from 'typeorm';
 import Contents from '../../entity/contents/contents.entity';
+import MysqlTemplate from '../../utils/database/MysqlTemplate';
 import Utils from '../../utils/Utils';
-import {NextFunction} from "index.d.ts";
+import {NextFunction} from "express";
 // import * as express from "./post.controller";
 // import CreatePostDto from "./post.dto";
 // import PostNotFoundException from "../exceptions/PostNotFoundException";
 // import Post from "./post.entity";
 
-import versionQuery from './version.query';
+import VersionQuery from './version.query';
 
 import {Container, Service, Inject} from 'typedi';
 import {Logger} from "winston";
@@ -22,28 +23,27 @@ enum contentsType {
 
 @Service()
 export default class VersionService {
-    @Inject('utils')
-    private Utils;
     @Inject('mysql')
-    private mysql: Mysql;
+    private mysqlTemp: MysqlTemplate;
+
     @Inject('logger')
     private logger: Logger;
 
-    private Query;
+    private Query: VersionQuery;
 
     constructor() {
-        this.Query = new versionQuery();
+        this.Query = new VersionQuery();
     };
 
     public getRecent = async (type: string) => {
 
-        const versionData = (await this.mysql.exec(this.Query.recent(), [type]))[0];
+        const versionData = (await this.mysqlTemp.query(this.Query.recent(), [type]))[0];
 
         if (!versionData) {
-            throw new ErrorResponse(404, "Version not exist", 1);
+            throw new ErrorResponse(404, "Version not exist", '01');
         }
 
-        return {versionData};
+        return versionData;
 
         // const contents = await this.contentsRepository.find({
         //     where: {

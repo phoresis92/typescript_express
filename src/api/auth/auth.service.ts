@@ -1,13 +1,9 @@
 import argon2 from 'argon2';
-import {createHash} from 'crypto';
 import {Request} from 'express';
-import moment = require('moment');
-import * as uuid from 'uuid';
 import jwt from 'jsonwebtoken';
 import redis, {RedisClient, print} from 'redis';
 import {Container, Service, Inject} from 'typedi';
 import {promisify} from 'util';
-import {Logger} from 'winston';
 import TokenInterface from '../../interfaces/token.interface';
 
 import UtilsClass from '../../utils/Utils';
@@ -25,28 +21,25 @@ import ErrorResponse from "../../utils/response/ErrorResponse";
 @Service('AuthService')
 export default class AuthService {
 
-    @Inject()
-    private AuthDAO: AuthDAOClass;
-    @Inject('redis')
-    private Redis: RedisClient;
-
-    @Inject('logger')
-    private logger: Logger;
+    private AuthDAO: AuthDAOClass = Container.get('AuthDAO');
+    private Redis: RedisClient = Container.get('redis');
 
     constructor() {};
 
     public signinService = async (SigninDto: SigninDtoClass): Promise<any> => {
         console.log('signinService');
 
+        try {
+
             /** UserLogin Check **/
             const loginData = await this.AuthDAO.getUserLoginById(SigninDto.loginId);
             {
-                throw new ErrorResponse(404, "loginId not exist", '01');
                 if (!loginData) {
+                    throw new ErrorResponse(404, "loginId not exist", '01');
                 }
 
                 if (SigninDto.joinType === 'NORMAL') {
-                    if(loginData.password === null){
+                    if (loginData.password === null) {
                         throw new ErrorResponse(400, "In NORMAL type must have password", '02');
                         return;
                     }
@@ -67,11 +60,11 @@ export default class AuthService {
             /** User Check **/
             const userData = await this.AuthDAO.getUserByUserId(loginData.user_id);
             {
-                if(!userData){
+                if (!userData) {
                     throw new ErrorResponse(404, `Not exist userData`, '03');
                     return;
                 }
-                if(userData.user_status !== 50){
+                if (userData.user_status !== 50) {
                     throw new ErrorResponse(403, `Deleted or Blocked user`, '04');
                     return;
                 }
@@ -81,19 +74,19 @@ export default class AuthService {
             /** Session Check **/
             let sessionData: any = await this.AuthDAO.getSessionBySessionId(SigninDto.sessionId);
             {
-                if(sessionData){
+                if (sessionData) {
                     const {updateSessionResult, updateLoginResult} = await this.AuthDAO.updateLastLoginDate(SigninDto.sessionId, SigninDto.pushKey, loginData.user_id);
 
-                }else{
+                } else {
                     const loginGroup: string = (SigninDto.osType === 'AOD' || SigninDto.osType === 'IOS' ? 'MOBILE' : (SigninDto.osType === 'WEB' ? 'WEB' : 'ETC'));
                     const anotherSession = await this.AuthDAO.getSessionByLoginGroup(loginData.user_id, loginGroup);
 
-                    if(anotherSession && SigninDto.loginForce === 0){
+                    if (anotherSession && SigninDto.loginForce === 0) {
                         throw new ErrorResponse(401, `Another session exist`, '05');
                         return;
-                    }else if(anotherSession){
+                    } else if (anotherSession) {
                         const deleteResult = await this.AuthDAO.deleteSessionByUserIdAndLoginGroup(loginData.user_id, loginGroup);
-                        if(deleteResult.affectedRows === 0){
+                        if (deleteResult.affectedRows === 0) {
                             throw new ErrorResponse(500, `[DB] DELETE SESSION`, '06');
                             return;
                         }
@@ -116,9 +109,9 @@ export default class AuthService {
             /** Token **/
             {
                 const accessToken: string = this.generateToken({
-                    uuid: userData.uuid.toString(),
-                    sessionId: sessionData.session_id
-                }, '20m');
+                                                                   uuid: userData.uuid.toString(),
+                                                                   sessionId: sessionData.session_id
+                                                               }, '20m');
                 const refreshToken: string = this.generateToken({sessionId: sessionData.session_id}, '1w');
 
                 // const hmsetSync = promisify(this.Redis.hmset).bind(this.Redis);
@@ -135,7 +128,7 @@ export default class AuthService {
                 const expireSync = promisify(this.Redis.expire).bind(this.Redis);
                 let expireResult = await expireSync(sessionData.session_id, 60 * 60 * 24 * 7);
 
-                if(hmsetResult !== 'OK' || expireResult !== 1){
+                if (hmsetResult !== 'OK' || expireResult !== 1) {
                     const hdelSync = promisify(this.Redis.hdel).bind(this.Redis);
                     // @ts-ignore
                     await hdelSync(sessionData.session_id, 'userId', 'refreshToken');
@@ -154,6 +147,10 @@ export default class AuthService {
 
             // this.logger.error(`🔥 auth.servicesigninService:\n\t${err.message}`);
 
+        }catch (e) {
+            // console.log(e);
+            throw e;
+        }
     };
 
     public signupService = async (SignupDto: SignupDtoClass): Promise<any> => {

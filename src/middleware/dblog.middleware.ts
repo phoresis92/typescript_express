@@ -10,6 +10,7 @@ import ResponseInterface from '../interfaces/Response';
 import {getRepository} from 'typeorm';
 import {Logger} from "winston";
 import Mysql from '../loaders/MysqlTemplate';
+import MysqlTemplate from '../utils/database/MysqlTemplate';
 
 
 const dbLogMiddleware = async (nextData: ResponseInterface | Error, request: Request, response: Response, next: NextFunction) => {
@@ -19,6 +20,7 @@ const dbLogMiddleware = async (nextData: ResponseInterface | Error, request: Req
     }
 
     const logger: Logger = Container.get('logger');
+    const mysqlTemp: MysqlTemplate = Container.get('mysql');
 
     // const mysql: Mysql = Container.get('mysql');
     const logErrQuery = new LogErrQuery();
@@ -26,7 +28,7 @@ const dbLogMiddleware = async (nextData: ResponseInterface | Error, request: Req
     const ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
 
     try {
-        const recordSet = await Mysql.exec(logErrQuery.create(),
+        const recordSet = await mysqlTemp.query(logErrQuery.create(),
                    [
                        response.statusCode,
                        ConfigClass.server,
@@ -54,7 +56,7 @@ const dbLogMiddleware = async (nextData: ResponseInterface | Error, request: Req
         //      reg_date: new Date(),
         //  });
         // await logErrRepository.save(newLog);
-        logger.info(`[${response.statusCode}|${request.method}|${request.path}]${JSON.stringify(nextData.resultData)}`);
+        logger.info(`[${ip}|${response.statusCode}|${request.method}|${request.path}]${JSON.stringify(nextData.resultData)}`);
 
     } catch (e) {
         logger.error(e);

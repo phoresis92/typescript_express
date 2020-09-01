@@ -9,7 +9,7 @@ import ErrorResponse from '../../utils/response/ErrorResponse';
 import UtilsClass from '../../utils/Utils';
 import SignupDtoClass from './dto/signup.dto';
 
-@Service()
+@Service('AuthDAO')
 export default class AuthDAO{
 
     @Inject('utils')
@@ -20,26 +20,30 @@ export default class AuthDAO{
     constructor(){}
 
     public async getUserLoginById (loginId: string, statusCheck?: boolean): Promise<any> {
-
-        let query =`
+        try {
+            let query = `
             SELECT *
             FROM t_nf_user_login l
             WHERE l.login_id = ?
             `;
 
-        if(statusCheck){
-            query = `
+            if (statusCheck) {
+                query = `
                 SELECT l.*
                 FROM (${query}) l
                 INNER JOIN t_nf_user u ON u.user_id = l.user_id
                     AND u.user_status = 50
             `
+            }
+
+            const recordSet = await this.Mysql.query(query, [loginId]);
+
+            return recordSet[0];
+
+        }catch (e) {
+            console.log(e);
+            throw e;
         }
-
-        const recordSet = await this.Mysql.query(query, [loginId]);
-
-        return recordSet[0];
-
     }
 
     public async getUserByUserId (userId: number): Promise<any> {
@@ -211,7 +215,7 @@ export default class AuthDAO{
 
         }
 
-        const uuid = this.Utils.makeUserId();
+        const uuid = UtilsClass.makeUserId();
         let userId: number;
 
         const [conn, querySync] = await this.Mysql.getConn();

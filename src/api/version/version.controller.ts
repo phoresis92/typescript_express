@@ -16,7 +16,6 @@ import {celebrate, Joi} from 'celebrate';
 
 import {Container, Inject} from 'typedi';
 import VersionService from './version.service';
-import {Logger} from "winston";
 import ErrorResponse from "../../utils/response/ErrorResponse";
 import FailResponse from "../../utils/response/FailResponse";
 
@@ -24,9 +23,6 @@ import FailResponse from "../../utils/response/FailResponse";
 class VersionController implements Controller {
     public path = '/version';
     public router = express.Router();
-
-    @Inject('logger')
-    private logger: Logger;
 
     constructor() {
         this.initializeRoutes();
@@ -47,9 +43,9 @@ class VersionController implements Controller {
 
         try {
             const versionService = Container.get(VersionService);
-            const {versionData} = await versionService.getRecent(type);
+            const versionData = await versionService.getRecent(type);
 
-            response.send(new SuccessResponse(request, request.params, next).make({versionData}, '01'));
+            response.send(new SuccessResponse(request, request.params, next).make(versionData, '01'));
         } catch (e) {
             if (e instanceof ErrorResponse) {
                 response.status(e.status).send(new FailResponse(request, request.params, next).make({}, e.errorCode, e.message));
